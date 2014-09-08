@@ -11,24 +11,42 @@ import JSHash
 
 newtype Id = Mk_Id (Int,Int)
 
-data W_Character = Mk_W_Character { id          :: Id
-                                  , visible     :: Bool
-                                  , literal     :: Char
-                                  , previous_id :: Id
-                                  , next_id     :: Id    }
+data W_Character = W_Character { id          :: Id
+                               , visible     :: Bool
+                               , literal     :: Char
+                               , previous_id :: Id
+                               , next_id     :: Id    }
 
+data Operation = Insert Id Char Id Id
+               | Delete Id
+
+operation_to_wchar (Insert a b c d) = 
+    W_Character { Main.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
 consoleLog :: String -> IO ()
 consoleLog str = ffi $ toJSStr ("console.log('" ++ str ++ "');")
+
+newIntegerArray :: String -> IO (JSHash Int a)
+newIntegerArray name = newHash name
+
+
 
 clientMain :: IO ()
 clientMain = withElems ["editor"] $ 
     \[editor] ->
     do setProp editor "innerHTML" "0123456789"
        th <- newHash "test"::IO (JSHash String (Int,Int))
-       storeHash th "test" (2,5)
-       a<-readHash th "test"
-       x<- (getProp editor "innerHTML")
+       content <- newHash "content" :: IO (JSHash Id W_Character)
+       op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
+       push op_pool "first"
+       push op_pool "second"
+       x <- pop op_pool
+       consoleLog x
+       x <- pop op_pool
+       consoleLog x
+       storeHash th "key" (8,3)
+       a <- readHash th "key"
+       x <- (getProp editor "innerHTML")
        setProp editor "innerHTML" $ show a
        return ()
 
