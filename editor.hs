@@ -38,8 +38,8 @@ subseq :: (JSHash Id (Ptr W_Character)) -> Id -> Id -> IO [ W_Character ]
 subseq hash previous next = do if previous == next 
                                then return []
                                else do hd <- readHash hash previous
-                                       tl <- (subseq hash (next_id $ fromPtr hd) next)
-                                       return (fromPtr hd:tl)
+                                       tl <- (subseq hash (next_id hd) next)
+                                       return (hd:tl)
 
 wc1 = W_Character {Main.id=Mk_Id (1,1),visible=True,literal='a',previous_id=Mk_Id (0,0),next_id=Mk_Id (1,2)}
 
@@ -47,7 +47,7 @@ clientMain :: IO ()
 clientMain = withElems ["editor"] $ 
     \[editor] ->
     do setProp editor "innerHTML" "0123456789"
-       th <- newHash "test"::IO (JSHash String (Int,Int))
+--       th <- newHash "test"::IO (JSHash String (Int,Int))
        content <- newHash "content" :: IO (JSHash Id (Ptr W_Character))
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
        storeHash content (Mk_Id (1,1)) $ toPtr wc1
@@ -61,10 +61,10 @@ clientMain = withElems ["editor"] $
        consoleLog x
        x <- pop op_pool
        consoleLog x
-       storeHash th "key" (8,3)
-       a <- readHash th "key"
-       x <- (getProp editor "innerHTML")
-       setProp editor "innerHTML" $ show a
+--       storeHash th "key" (8,3)
+--       a <- readHash th "key"
+--       x <- (getProp editor "innerHTML")
+--       setProp editor "innerHTML" $ show x
        return ()
 
 

@@ -15,12 +15,6 @@ class Hashable a where
 instance Show x => Hashable x where
     hashKey = show
 
-instance Pack x => Pack (Ptr x) where
-
-instance Pack x => Unpack (Ptr x) where
-
-instance Pack x => Read (Ptr x) where
-
 newHash :: String -> IO (JSHash key a)
 newHash str = do (ffi $ toJSStr (str ++ "=Array();"))::IO ()
                  return $ Mknt str
@@ -33,7 +27,7 @@ storeHash (Mknt hash) key value =
 consoleLog :: String -> IO ()
 consoleLog str = ffi $ toJSStr ("console.log('" ++ str ++ "');")
 
-readHash :: (Hashable key, Unpack a,Pack a, Read a) => (JSHash key a) -> key -> IO a
+readHash :: (Hashable key, Unpack a,Pack a, Read a) => (JSHash key (Ptr a)) -> key -> IO a
 readHash (Mknt hash) key = do x <- ffi $ toJSStr (hash ++ "['" ++ (hashKey key) ++ "']")
                               return $ read x
 
