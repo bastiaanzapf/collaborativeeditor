@@ -15,6 +15,12 @@ class Hashable a where
 instance Show x => Hashable x where
     hashKey = show
 
+instance Pack x => Pack (Ptr x) where
+
+instance Pack x => Unpack (Ptr x) where
+
+instance Pack x => Read (Ptr x) where
+
 newHash :: String -> IO (JSHash key a)
 newHash str = do (ffi $ toJSStr (str ++ "=Array();"))::IO ()
                  return $ Mknt str
