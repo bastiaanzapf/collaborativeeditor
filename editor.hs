@@ -9,13 +9,18 @@ import Haste.WebSockets
 
 import JSHash
 
-newtype Id = Mk_Id (Int,Int)
+newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
 
 data W_Character = W_Character { id          :: Id
                                , visible     :: Bool
                                , literal     :: Char
                                , previous_id :: Id
-                               , next_id     :: Id    }
+                               , next_id     :: Id    } deriving 
+    (Show, Read)
+
+instance Pack W_Character where
+
+instance Unpack W_Character where
 
 data Operation = Insert Id Char Id Id
                | Delete Id
@@ -29,7 +34,12 @@ consoleLog str = ffi $ toJSStr ("console.log('" ++ str ++ "');")
 newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name
 
-
+subseq :: (JSHash Id W_Character) -> Id -> Id -> IO [ W_Character ]
+subseq hash previous next = do if previous == next 
+                               then return []
+                               else do hd <- readHash hash previous
+                                       tl <- (subseq hash (next_id hd) next)
+                                       return (hd:tl)
 
 clientMain :: IO ()
 clientMain = withElems ["editor"] $ 
