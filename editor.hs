@@ -11,17 +11,16 @@ import JSHash
 
 --newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
 
-data Id = Mk_Id (Int,Int)
-        | Id_Begin
-        | Id_End    deriving (Show, Read, Eq)
+data Id = Mk_Id (Int,Int) deriving (Show, Read, Eq)
+
+id_Begin = Mk_Id (0,0)
+id_End   = Mk_Id (0,1)
 
 data W_Character = W_Character { id          :: Id
                                , visible     :: Bool
                                , literal     :: Char
                                , previous_id :: Id
                                , next_id     :: Id    } 
-                   | W_Begin 
-                   | W_End
                    deriving (Show, Read)
 
 instance Pack W_Character where
@@ -52,11 +51,14 @@ subseq hash previous next = do if previous == next
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 
-wc1 = W_Character {Main.id=Mk_Id (1,1),visible=True,literal='a',previous_id=Id_Begin,next_id=Mk_Id (1,2)}
+wc_begin = W_Character {Main.id=id_Begin,visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
+wc_end = W_Character {Main.id=id_End,visible=False,literal=' ',previous_id=id_End,next_id=id_Begin}
 
-wc2 = W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
+wc1 = W_Character {Main.id=Mk_Id (1,1),visible=True,literal='a',previous_id=id_Begin,next_id=id_End}
 
-wc3 = W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Id_End}
+wc2 = W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id_Begin,next_id=id_End}
+
+wc3 = W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
 clientMain :: IO ()
 clientMain = withElems ["editor"] $ 
@@ -64,12 +66,17 @@ clientMain = withElems ["editor"] $
     do setProp editor "innerHTML" "0123456789"
        content <- newHash "content" :: IO (JSHash Id W_Character)
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
+
        let storeInContent x = storeHash content (Main.id x) x
-       storeInContent wc1
-       storeInContent wc2
-       storeInContent wc3
-       a <- subseq content (Mk_Id (1,1)) (Mk_Id (1,3))
+
+       storeInContent wc_begin
+       storeInContent wc_end
+
+
+       a <- subseq content id_Begin id_End
+
        consoleLog $ map literal a
+
        push op_pool "first"
        push op_pool "second"
        x <- pop op_pool
