@@ -9,6 +9,7 @@ import Haste.WebSockets
 
 import JSHash
 import Editor
+import ConsoleLog
 
 --newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
 
@@ -24,14 +25,6 @@ wc1 = W_Character {Editor.id=Mk_Id (1,1),visible=True,literal='a',previous_id=id
 wc2 = W_Character {Editor.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id_Begin,next_id=id_End}
 
 wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
-
-jsEscape ('\'':tc) = '\\':'\'':jsEscape tc
-jsEscape (x:tc) = x:jsEscape tc
-jsEscape [] = []
-
-consoleLog :: String -> IO ()
-consoleLog str = 
-    ffi $ toJSStr ("console.log('" ++ jsEscape str ++ "');")
 
 newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name

@@ -3,12 +3,10 @@ module Editor (Id(Mk_Id),W_Character(W_Character),
                Editor.id,visible,literal,previous_id,next_id,  
                subseq,mergeIntoHash) where
 
-import Haste
 import Haste.Prim
-import Haste.App
---import Haste.App.Concurrent
 import Haste.Foreign
 import JSHash
+import ConsoleLog
 
 data Id = Mk_Id (Int,Int) deriving (Show, Read, Eq, Ord)
 
@@ -28,15 +26,6 @@ data Operation = Insert Id Char Id Id
 
 operation_to_wchar (Insert a b c d) = 
     W_Character { Editor.id=a, visible=True, literal=b, previous_id=c, next_id=d }
-
-jsEscape ('\'':tc) = '\\':'\'':jsEscape tc
-jsEscape (x:tc) = x:jsEscape tc
-jsEscape [] = []
-
-consoleLog :: String -> IO ()
-consoleLog str = 
-    ffi $ toJSStr ("console.log('" ++ jsEscape str ++ "');")
-
 
 subseq :: (JSHash Id W_Character) -> Id -> Id -> IO [ W_Character ]
 subseq hash previous next = do if previous == next 
