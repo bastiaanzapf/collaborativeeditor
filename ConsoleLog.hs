@@ -3,11 +3,12 @@ module ConsoleLog (consoleLog) where
 
 import Haste.Foreign
 import Haste.Prim
+import Haste.App
 
 jsEscape ('\'':tc) = '\\':'\'':jsEscape tc
 jsEscape (x:tc) = x:jsEscape tc
 jsEscape [] = []
 
-consoleLog :: String -> IO ()
+consoleLog :: String -> Client ()
 consoleLog str = 
-    ffi $ toJSStr ("console.log('" ++ jsEscape str ++ "');")
+    liftIO $ ffi $ toJSStr ("console.log('" ++ jsEscape str ++ "');")
