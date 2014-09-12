@@ -40,11 +40,11 @@ newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name
 
 subseq :: (JSHash Id W_Character) -> Id -> Id -> IO [ W_Character ]
-subseq hash previous next = do consoleLog "subseq"
+subseq hash previous next = do consoleLog $ show previous
                                if previous == next 
                                then return []
                                else do hd <- readHash hash previous
-                                       consoleLog $ show hd
+                                       consoleLog "testsubseq"
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 

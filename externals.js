@@ -12,5 +12,7 @@ function jsStoreHash ( hash, key, value ) {
 }
 
 function jsReadHash ( hash, key ) {
+   console.log("Read Hash");
+   console.log(window[hash][key]);
    return window[hash][key];
 }
