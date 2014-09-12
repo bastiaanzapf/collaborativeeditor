@@ -40,9 +40,11 @@ newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name
 
 subseq :: (JSHash Id (Ptr W_Character)) -> Id -> Id -> IO [ W_Character ]
-subseq hash previous next = do if previous == next 
+subseq hash previous next = do consoleLog "subseq"
+                               if previous == next 
                                then return []
                                else do hd <- readHash hash previous
+                                       consoleLog $ show hd
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 
@@ -56,7 +58,9 @@ clientMain = withElems ["editor"] $
        content <- newHash "content" :: IO (JSHash Id (Ptr W_Character))
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
        consoleLog "test"
+       consoleLog $ show content
        storeHash content (Mk_Id (1,1)) $ toPtr wc1
+       consoleLog "test11"
        storeHash content (Mk_Id (1,2)) $ toPtr $ W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
        storeHash content (Mk_Id (1,3)) $ toPtr $ W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Mk_Id (0,0)}
        let u= show wc1
