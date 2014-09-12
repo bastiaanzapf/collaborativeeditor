@@ -32,7 +32,7 @@ consoleLog str = ffi $ toJSStr ("console.log('" ++ str ++ "');")
 
 foreign import ccall jsReadHash :: JSString -> JSString -> IO (Ptr a)
 
-readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a ) => (JSHash key (Ptr a)) -> key -> IO a
+readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a ) => (JSHash key a) -> key -> IO a
 readHash (Mknt hash) key = do x <- jsReadHash (toJSStr hash) (toJSStr $ hashKey key)
                               consoleLog $ show $ fromPtr x
                               return $ fromPtr x

@@ -39,7 +39,7 @@ consoleLog str =
 newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name
 
-subseq :: (JSHash Id (Ptr W_Character)) -> Id -> Id -> IO [ W_Character ]
+subseq :: (JSHash Id W_Character) -> Id -> Id -> IO [ W_Character ]
 subseq hash previous next = do consoleLog "subseq"
                                if previous == next 
                                then return []
@@ -55,14 +55,14 @@ clientMain = withElems ["editor"] $
     \[editor] ->
     do setProp editor "innerHTML" "0123456789"
 --       th <- newHash "test"::IO (JSHash String (Int,Int))
-       content <- newHash "content" :: IO (JSHash Id (Ptr W_Character))
+       content <- newHash "content" :: IO (JSHash Id W_Character)
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
        consoleLog "test"
        consoleLog $ show content
-       storeHash content (Mk_Id (1,1)) $ toPtr wc1
+       storeHash content (Mk_Id (1,1)) $ wc1
        consoleLog "test11"
-       storeHash content (Mk_Id (1,2)) $ toPtr $ W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
-       storeHash content (Mk_Id (1,3)) $ toPtr $ W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Mk_Id (0,0)}
+       storeHash content (Mk_Id (1,2)) $ W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
+       storeHash content (Mk_Id (1,3)) $ W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Mk_Id (0,0)}
        let u= show wc1
        consoleLog u
        consoleLog "test2"
