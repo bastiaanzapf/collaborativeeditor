@@ -2,7 +2,7 @@
 import Haste
 import Haste.Prim
 import Haste.App
---import Haste.App.Concurrent
+import Haste.App.Concurrent
 import Haste.Foreign
 
 import Haste.WebSockets
@@ -10,6 +10,16 @@ import Haste.WebSockets
 import JSHash
 import Editor
 import ConsoleLog
+
+import Data.IORef
+import Control.Monad
+import Control.Applicative
+
+
+data API = API {
+    apiHello :: Remote (Server Int)
+  }
+
 
 --newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
 
@@ -26,15 +36,11 @@ wc2 = W_Character {Editor.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id
 
 wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
-newIntegerArray :: String -> IO (JSHash Int a)
-newIntegerArray name = newHash name
-
-clientMain :: IO ()
-clientMain = withElems ["editor"] $ 
-    \[editor] ->
-    do setProp editor "innerHTML" "0123456789"
-       content <- newHash "content" :: IO (JSHash Id W_Character)
-       op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
+clientMain :: API -> Client ()
+clientMain api = 
+    do --setProp editor "innerHTML" "0123456789"
+       content <- newHash "content" :: Client (JSHash Id W_Character)
+       op_pool <- newHash "pool" :: Client (JSHash Int String)
 
        let storeInContent x = storeHash content (Editor.id x) x
 
@@ -71,11 +77,23 @@ append ws str = withElems ["editor"] $
 
 send ws = do wsSend ws $ toJSStr "roundtriptest"
 
+hello :: Server (IORef a,IORef b) -> Server Int
+hello state = return 17
+
 -- | Launch the application!
 main :: IO ()
-main = concurrent $ do x<-newEmptyMVar
-                       liftIO $ clientMain
---                       withWebSocket "ws://localhost:9000/ws" append (return ()) send
-                       return ()
+main = do
+  -- Run the Haste.App application. Please note that a computation in the App
+  -- monad should never contain any free variables.
+  runApp (mkConfig "ws://localhost:24601" 24601) $ do
+    -- Create our state-holding elements
+    state <- liftServerIO $ do
+      clients <- newIORef []
+      messages <- newIORef []
+      return (clients, messages)
 
+    -- Create an API object holding all available functions
+    api <- API <$> remote (hello state)
 
+    -- Launch the client
+    runClient $ clientMain api

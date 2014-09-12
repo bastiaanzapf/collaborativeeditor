@@ -5,6 +5,7 @@ module Editor (Id(Mk_Id),W_Character(W_Character),
 
 import Haste.Prim
 import Haste.Foreign
+import Haste.App
 import JSHash
 import ConsoleLog
 
@@ -27,7 +28,7 @@ data Operation = Insert Id Char Id Id
 operation_to_wchar (Insert a b c d) = 
     W_Character { Editor.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
-subseq :: (JSHash Id W_Character) -> Id -> Id -> IO [ W_Character ]
+subseq :: (JSHash Id W_Character) -> Id -> Id -> Client [ W_Character ]
 subseq hash previous next = do if previous == next 
                                then return []
                                else do hd <- readHash hash previous
