@@ -4,10 +4,7 @@ module ConsoleLog (consoleLog) where
 import Haste.Foreign
 import Haste.Prim
 import Haste.App
-
-jsEscape ('\'':tc) = '\\':'\'':jsEscape tc
-jsEscape (x:tc) = x:jsEscape tc
-jsEscape [] = []
+import JSEscape
 
 consoleLog :: String -> Client ()
 consoleLog str = 

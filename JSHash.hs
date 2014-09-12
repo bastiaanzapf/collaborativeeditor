@@ -1,12 +1,15 @@
 
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts     #-}
 
 module JSHash (JSHash, newHash, storeHash, readHash, push, pop) where
 
 import Haste.Prim
 import Haste.Foreign
 import Haste.App
+import ConsoleLog
+import JSEscape
 
 newtype JSHash a b = Mknt String deriving (Show,Read)
 
@@ -16,29 +19,37 @@ class Hashable a where
 instance Show x => Hashable x where
     hashKey = show
 
-foreign import ccall jsNewHash :: Ptr String -> IO ()
-foreign import ccall jsStoreHash :: Ptr String -> Ptr String -> Ptr a -> IO ()
-foreign import ccall jsReadHash :: Ptr String -> Ptr String -> IO (Ptr a)
-foreign import ccall jsPush :: Ptr String -> Ptr a -> IO ()
-foreign import ccall jsPop :: Ptr String -> IO (Ptr a)
-
 newHash :: String -> Client (JSHash key a)
-newHash str = do liftIO $ jsNewHash $ toPtr str
+newHash str = do let js = ("window." ++ (str) ++ "=Array()") :: String
+                 liftIO $ ffi $ toJSStr js :: Client ()
                  return $ Mknt str
 
 
-storeHash :: (Hashable key,Show a) => (JSHash key a) -> key -> a -> Client ()
-storeHash (Mknt hash) key value = liftIO $ 
-    jsStoreHash (toPtr hash) (toPtr $ hashKey key) (toPtr value)
+storeHash :: (Hashable key,Show key, Show a) => (JSHash key a) -> key -> a -> Client ()
+storeHash (Mknt hash) key value = do
+  consoleLog "storeHash"
+  consoleLog $ hashKey key
+  let js = ("window." ++ hash ++ "['" ++ hashKey key ++ "']=" ++ "'" ++(jsEscape $ show value) ++ "'")
+  consoleLog $ show js
+  liftIO $ ffi $ toJSStr js :: Client ()
 
-readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a ) => 
+readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a,Show key ) => 
             (JSHash key a) -> key -> Client a
-readHash (Mknt hash) key = do x <- liftIO $ jsReadHash (toPtr hash) (toPtr $ hashKey key)
-                              return $ fromPtr x
+readHash (Mknt hash) key = do 
+  consoleLog "readHash"
+  consoleLog $ hashKey key
+  let js = ("window." ++ hash ++ "['" ++ hashKey key ++ "']")
+  x <- liftIO $ ffi $ toJSStr js
+  consoleLog $ x
+  return $ read x
 
 push :: (Show b) => JSHash Int b -> b -> Client () 
-push (Mknt hash) value = liftIO $ jsPush (toPtr hash) (toPtr value)
+push (Mknt hash) value = do
+  let js = ("window." ++ hash ++ ".push('" ++ (jsEscape $ show value) ++ "')")
+  liftIO $ ffi $ toJSStr js :: Client ()
 
-pop :: (Pack b, Unpack b) => JSHash Int b -> Client b 
-pop (Mknt hash) = do x <- liftIO $ jsPop (toPtr hash)
-                     return $ fromPtr x
+pop :: (Pack b, Unpack b) => JSHash Int b -> Client b
+pop (Mknt hash) = do
+  let js = ("window." ++ hash ++ ".pop()")
+  liftIO $ ffi $ toJSStr js 
+

@@ -53,7 +53,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
 
        setProp editor "innerHTML" "0123456789"
 
-       content <- newHash "content" :: Client (JSHash Id W_Character)
+       content <- newHash "editor_data" :: Client (JSHash Id W_Character)
        op_pool <- newHash "pool" :: Client (JSHash Int String)
 
        let storeInContent x = storeHash content (Editor.id x) x
@@ -62,15 +62,12 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        storeInContent wc_end
 
        seq <- subseq content id_Begin id_End
-       consoleLog $ show $ seq       
-       consoleLog $ show id_Begin
-       testHash content
+
        mergeIntoHash content wc3
-       testHash content
+
        mergeIntoHash content wc2
-       testHash content
+
        mergeIntoHash content wc1
-       testHash content
 
        a <- subseq content id_Begin id_End
 
