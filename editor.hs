@@ -9,14 +9,20 @@ import Haste.WebSockets
 
 import JSHash
 
-newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
+--newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
+
+data Id = Mk_Id (Int,Int)
+        | Id_Begin
+        | Id_End    deriving (Show, Read, Eq)
 
 data W_Character = W_Character { id          :: Id
                                , visible     :: Bool
                                , literal     :: Char
                                , previous_id :: Id
-                               , next_id     :: Id    } deriving 
-    (Show, Read)
+                               , next_id     :: Id    } 
+                   | W_Begin 
+                   | W_End
+                   deriving (Show, Read)
 
 instance Pack W_Character where
 
@@ -46,11 +52,11 @@ subseq hash previous next = do if previous == next
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 
-wc1 = W_Character {Main.id=Mk_Id (1,1),visible=True,literal='a',previous_id=Mk_Id (0,0),next_id=Mk_Id (1,2)}
+wc1 = W_Character {Main.id=Mk_Id (1,1),visible=True,literal='a',previous_id=Id_Begin,next_id=Mk_Id (1,2)}
 
 wc2 = W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
 
-wc3 = W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Mk_Id (0,0)}
+wc3 = W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Id_End}
 
 clientMain :: IO ()
 clientMain = withElems ["editor"] $ 
@@ -58,9 +64,10 @@ clientMain = withElems ["editor"] $
     do setProp editor "innerHTML" "0123456789"
        content <- newHash "content" :: IO (JSHash Id W_Character)
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
-       storeHash content (Mk_Id (1,1)) $ wc1
-       storeHash content (Mk_Id (1,2)) $ wc2
-       storeHash content (Mk_Id (1,3)) $ wc3
+       let storeInContent x = storeHash content (Main.id x) x
+       storeInContent wc1
+       storeInContent wc2
+       storeInContent wc3
        a <- subseq content (Mk_Id (1,1)) (Mk_Id (1,3))
        consoleLog $ map literal a
        push op_pool "first"
