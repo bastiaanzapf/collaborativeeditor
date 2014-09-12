@@ -37,8 +37,8 @@ wc2 = W_Character {Editor.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id
 wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
 clientMain :: API -> Client ()
-clientMain api = 
-    do --setProp editor "innerHTML" "0123456789"
+clientMain api = withElems ["editor"] $ \[editor] -> do 
+       setProp editor "innerHTML" "0123456789"
        content <- newHash "content" :: Client (JSHash Id W_Character)
        op_pool <- newHash "pool" :: Client (JSHash Int String)
 
