@@ -32,17 +32,12 @@ subseq :: (JSHash Id W_Character) -> Id -> Id -> Client [ W_Character ]
 subseq hash previous next = do if previous == next 
                                then return []
                                else do hd <- readHash hash previous
-                                       consoleLog "unequal"
-                                       consoleLog $ show (next_id hd)
-                                       consoleLog $ show next
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 
 insert hash previous_id next_id wchar =
     do previous <- readHash hash $ previous_id wchar
        next     <- readHash hash $ next_id     wchar
-
-       consoleLog $ show (Editor.id wchar)
 
        let storeWithId x = storeHash hash (Editor.id x) x
 
@@ -60,11 +55,6 @@ insert hash previous_id next_id wchar =
                                   previous_id=Editor.id wchar,
                                   next_id=next_id next}
 
-       consoleLog $ show (Editor.id wchar)
-
-       x<-readHash hash (Editor.id wchar)
-       consoleLog $ show x
-
 
 findPosition (hwc:hwc2:twc) wc = if (Editor.id wc)<=(Editor.id hwc2)
                                     then (hwc,hwc2)
@@ -81,9 +71,9 @@ between wc1 wc2 wc = W_Character {Editor.id=Editor.id wc,
 
 mergeIntoHash hash wchar = 
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
-       if seq == [] 
+       if seq == [] || tail seq == [] 
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)               
                let inclseq = seq ++ [ next ]
-               let (a,b) = findPosition inclseq wchar
+               let (a,b) = findPosition inclseq wchar               
                mergeIntoHash hash (between a b wchar)

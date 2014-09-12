@@ -62,11 +62,11 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        storeInContent wc_end
 
        seq <- subseq content id_Begin id_End
-
+       consoleLog "eins"
        mergeIntoHash content wc3
-
+       consoleLog "zwei"
        mergeIntoHash content wc2
-
+       consoleLog "drei"
        mergeIntoHash content wc1
 
        a <- subseq content id_Begin id_End
