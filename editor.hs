@@ -80,7 +80,7 @@ insert hash previous_id next_id wchar =
                                   previous_id=Main.id wchar,
                                   next_id=next_id next}
 
-findPosition (hwc:hwc2:twc) wc = if (Main.id wc)>=(Main.id hwc)
+findPosition (hwc:hwc2:twc) wc = if (Main.id wc)<=(Main.id hwc2)
                                     then (hwc,hwc2)
                                     else findPosition (hwc2:twc) wc
 
@@ -95,7 +95,7 @@ between wc1 wc2 wc = W_Character {Main.id=Main.id wc,
 
 mergeIntoHash hash wchar = 
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
-       if seq == []
+       if tail seq == []
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)               
                let inclseq = seq ++ [ next ]
@@ -114,6 +114,11 @@ clientMain = withElems ["editor"] $
        storeInContent wc_begin
        storeInContent wc_end
 
+       seq <- subseq content id_Begin id_End
+--       consoleLog $ show $ tail seq
+       mergeIntoHash content wc3
+       mergeIntoHash content wc2
+       mergeIntoHash content wc1
 
        a <- subseq content id_Begin id_End
 
