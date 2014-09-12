@@ -36,6 +36,9 @@ clientMain = withElems ["editor"] $
        content <- newHash "content" :: IO (JSHash Id W_Character)
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
 
+       id <- onServer $ apiHello api
+       consoleLog $ show id
+
        let storeInContent x = storeHash content (Editor.id x) x
 
        storeInContent wc_begin
