@@ -1,5 +1,5 @@
 
-function jsNewHash ( hash ) {
+function jsNewHash ( hash ) {	 
    window[hash] = Array();
 }
 

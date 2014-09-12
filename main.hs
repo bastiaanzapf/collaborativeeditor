@@ -15,9 +15,12 @@ import Data.IORef
 import Control.Monad
 import Control.Applicative
 
+type State = (IORef [Int], IORef [String])
 
 data API = API {
-    apiHello :: Remote (Server Int)
+    apiHello :: Remote (Server Int),
+    apiSend :: Remote (Server () ),
+    apiAwait :: Remote (Server () )
   }
 
 
@@ -36,14 +39,22 @@ wc2 = W_Character {Editor.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id
 
 wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
+showKey hash key = do x<-readHash hash key
+                      consoleLog $ show x
+
+testHash hash = do sequence $ map (showKey hash) [id_Begin,Mk_Id (1,1),Mk_Id (1,2),Mk_Id (1,4),id_End]
+                   return ()
+
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
-       setProp editor "innerHTML" "0123456789"
-       content <- newHash "content" :: Client (JSHash Id W_Character)
-       op_pool <- newHash "pool" :: Client (JSHash Int String)
 
        id <- onServer $ apiHello api
-       consoleLog $ show id
+       consoleLog $ show id               
+
+       setProp editor "innerHTML" "0123456789"
+
+       content <- newHash "content" :: Client (JSHash Id W_Character)
+       op_pool <- newHash "pool" :: Client (JSHash Int String)
 
        let storeInContent x = storeHash content (Editor.id x) x
 
@@ -51,10 +62,15 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        storeInContent wc_end
 
        seq <- subseq content id_Begin id_End
---       consoleLog $ show $ tail seq
+       consoleLog $ show $ seq       
+       consoleLog $ show id_Begin
+       testHash content
        mergeIntoHash content wc3
+       testHash content
        mergeIntoHash content wc2
+       testHash content
        mergeIntoHash content wc1
+       testHash content
 
        a <- subseq content id_Begin id_End
 
@@ -66,6 +82,13 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        consoleLog x
        x <- pop op_pool
        consoleLog x
+
+       consoleLog "test"
+       fork $ let awaitLoop test = do 
+                    test <- onServer $ apiAwait api
+                    return ()
+                  in awaitLoop id
+
 --       storeHash th "key" (8,3)
 --       a <- readHash th "key"
 --       x <- (getProp editor "innerHTML")
@@ -78,10 +101,16 @@ append ws str = withElems ["editor"] $
    do  x<- getProp editor "innerHTML"
        setProp editor "innerHTML" (x ++ (fromJSStr str))
 
-send ws = do wsSend ws $ toJSStr "roundtriptest"
+hello :: Server State -> Server Int
+hello state = do liftIO $ putStrLn "hello"
+                 return 17
 
-hello :: Server (IORef a,IORef b) -> Server Int
-hello state = return 17
+await :: Server State -> Server ()
+await _ = do liftIO $ putStrLn "await"
+             return ()
+
+send :: Server State -> Server ()
+send _ = return ()
 
 -- | Launch the application!
 main :: IO ()
@@ -97,6 +126,8 @@ main = do
 
     -- Create an API object holding all available functions
     api <- API <$> remote (hello state)
+               <*> remote (send state)
+               <*> remote (await state)
 
     -- Launch the client
     runClient $ clientMain api

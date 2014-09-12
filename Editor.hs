@@ -29,7 +29,7 @@ operation_to_wchar (Insert a b c d) =
     W_Character { Editor.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
 subseq :: (JSHash Id W_Character) -> Id -> Id -> Client [ W_Character ]
-subseq hash previous next = do if previous == next 
+subseq hash previous next = do if previous == next || next == Mk_Id (9999999,0)
                                then return []
                                else do hd <- readHash hash previous
                                        tl <- (subseq hash (next_id hd) next)
@@ -38,6 +38,8 @@ subseq hash previous next = do if previous == next
 insert hash previous_id next_id wchar =
     do previous <- readHash hash $ previous_id wchar
        next     <- readHash hash $ next_id     wchar
+
+       consoleLog $ show (Editor.id wchar)
 
        let storeWithId x = storeHash hash (Editor.id x) x
 
@@ -55,6 +57,12 @@ insert hash previous_id next_id wchar =
                                   previous_id=Editor.id wchar,
                                   next_id=next_id next}
 
+       consoleLog $ show (Editor.id wchar)
+
+       x<-readHash hash (Editor.id wchar)
+       consoleLog $ show x
+
+
 findPosition (hwc:hwc2:twc) wc = if (Editor.id wc)<=(Editor.id hwc2)
                                     then (hwc,hwc2)
                                     else findPosition (hwc2:twc) wc
@@ -70,7 +78,7 @@ between wc1 wc2 wc = W_Character {Editor.id=Editor.id wc,
 
 mergeIntoHash hash wchar = 
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
-       if tail seq == []
+       if seq == [] || tail seq == []
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)               
                let inclseq = seq ++ [ next ]
