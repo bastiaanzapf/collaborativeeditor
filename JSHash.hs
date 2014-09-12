@@ -31,7 +31,7 @@ storeHash (Mknt hash) key value = do
   consoleLog $ hashKey key
   let js = ("window." ++ hash ++ "['" ++ hashKey key ++ "']=" ++ "'" ++(jsEscape $ show value) ++ "'")
   consoleLog $ show js
-  liftIO $ ffi $ toJSStr js :: Client ()
+  liftIO $ ffi $ toJSStr js
 
 readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a,Show key ) => 
             (JSHash key a) -> key -> Client a

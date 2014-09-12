@@ -29,9 +29,12 @@ operation_to_wchar (Insert a b c d) =
     W_Character { Editor.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
 subseq :: (JSHash Id W_Character) -> Id -> Id -> Client [ W_Character ]
-subseq hash previous next = do if previous == next || next == Mk_Id (9999999,0)
+subseq hash previous next = do if previous == next 
                                then return []
                                else do hd <- readHash hash previous
+                                       consoleLog "unequal"
+                                       consoleLog $ show (next_id hd)
+                                       consoleLog $ show next
                                        tl <- (subseq hash (next_id hd) next)
                                        return (hd:tl)
 
@@ -78,7 +81,7 @@ between wc1 wc2 wc = W_Character {Editor.id=Editor.id wc,
 
 mergeIntoHash hash wchar = 
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
-       if seq == [] || tail seq == []
+       if seq == [] 
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)               
                let inclseq = seq ++ [ next ]

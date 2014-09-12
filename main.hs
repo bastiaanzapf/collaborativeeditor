@@ -31,7 +31,7 @@ id_End   = Mk_Id (9999999,0)
 
 
 wc_begin = W_Character {Editor.id=id_Begin,visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
-wc_end = W_Character {Editor.id=id_End,visible=False,literal=' ',previous_id=id_End,next_id=id_Begin}
+wc_end = W_Character {Editor.id=id_End,visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
 
 wc1 = W_Character {Editor.id=Mk_Id (1,1),visible=True,literal='a',previous_id=id_Begin,next_id=id_End}
 
