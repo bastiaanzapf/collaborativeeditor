@@ -28,8 +28,13 @@ data Operation = Insert Id Char Id Id
 operation_to_wchar (Insert a b c d) = 
     W_Character { Main.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
+jsEscape ('\'':tc) = '\\':'\'':jsEscape tc
+jsEscape (x:tc) = x:jsEscape tc
+jsEscape [] = []
+
 consoleLog :: String -> IO ()
-consoleLog str = ffi $ toJSStr ("console.log('" ++ str ++ "');")
+consoleLog str = 
+    ffi $ toJSStr ("console.log('" ++ jsEscape str ++ "');")
 
 newIntegerArray :: String -> IO (JSHash Int a)
 newIntegerArray name = newHash name
@@ -50,10 +55,17 @@ clientMain = withElems ["editor"] $
 --       th <- newHash "test"::IO (JSHash String (Int,Int))
        content <- newHash "content" :: IO (JSHash Id (Ptr W_Character))
        op_pool <- newIntegerArray "pool" :: IO (JSHash Int String)
+       consoleLog "test"
        storeHash content (Mk_Id (1,1)) $ toPtr wc1
        storeHash content (Mk_Id (1,2)) $ toPtr $ W_Character {Main.id=Mk_Id (1,2),visible=True,literal='b',previous_id=Mk_Id (1,1),next_id=Mk_Id (1,3)}
        storeHash content (Mk_Id (1,3)) $ toPtr $ W_Character {Main.id=Mk_Id (1,4),visible=True,literal='c',previous_id=Mk_Id (1,2),next_id=Mk_Id (0,0)}
+       let u= show wc1
+       consoleLog u
+       consoleLog "test2"
+       consoleLog $ show $ ((read "W_Character {id = Mk_Id (1,2), visible = True, literal = 'a', previous_id = Mk_Id (0,0), next_id = Mk_Id (1,2)}")::W_Character)
+       consoleLog "test3"
        a <- subseq content (Mk_Id (1,1)) (Mk_Id (1,3))
+       consoleLog "test4"
        consoleLog $ map literal a
        push op_pool "first"
        push op_pool "second"
