@@ -34,8 +34,9 @@ await _ = do liftIO $ putStrLn "await"
              return ()
 
 send :: Server State -> Operation -> Server ()
-send state _ = do
+send state op = do
   liftIO $ putStrLn "send"
+  liftIO $ putStrLn $ show op
   (clients,messages) <- state
   msgarray <- liftIO $ readIORef messages
   liftIO $ forM_ msgarray $ \x -> return ()

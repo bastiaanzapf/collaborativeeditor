@@ -46,7 +46,9 @@ insertDummy = (Insert
 
 sendKey :: API -> Int -> Client ()
 sendKey api k = do consoleLog "test"
-                   onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
+                   case k of 
+                     8 -> onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
+                     _ -> onServer $ apiSend api <.> (insertDummy)
                    consoleLog "test2"
 
 

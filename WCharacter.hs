@@ -7,6 +7,10 @@ import Haste.Binary
 
 data Id = Mk_Id (Int,Int) deriving (Show, Read, Eq, Ord)
 
+instance Binary Id where
+    put (Mk_Id (a,b)) = put a >> put b
+    get = get
+
 data W_Character = W_Character { id          :: WCharacter.Id
                                , visible     :: Bool
                                , literal     :: Char
