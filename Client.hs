@@ -1,17 +1,23 @@
 
 module Client (clientMain) where
 
+import Haste
+import Haste.Prim
 import Haste.App
 import Haste.App.Concurrent
+
+import Haste.Foreign
+
 import ConsoleLog
 import JSHash
 import Editor
 import Operations
 import Server
 
+import Data.Char
+
 id_Begin = Mk_Id (0,0)
 id_End   = Mk_Id (9999999,0)
-
 
 wc_begin = W_Character {Editor.id=id_Begin,visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
 wc_end = W_Character {Editor.id=id_End,visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
@@ -25,26 +31,24 @@ wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id
 
 insertDummy k = (Insert 
                    W_Character { Editor.id = Mk_Id (-2,0) , 
-                                 literal = toEnum k ,
+                                 literal = chr k ,
                                  visible = True,
                                  next_id = Mk_Id (-2,0),
                                  previous_id = Mk_Id (-2,0) } )
 
 sendKey :: API -> Int -> Client ()
-sendKey api k = do consoleLog "test"
-                   case k of 
-                     8 -> onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
-                     _ -> onServer $ apiSend api <.> insertDummy k
-                   consoleLog "test2"
+sendKey api k = do consoleLog "sendKey"
+                   consoleLog $ show k
+                   onServer $ apiSend api <.> insertDummy k
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
        setProp editor "contentEditable" "true"
 
        id <- onServer $ apiHello api
-       consoleLog $ show id               
+       consoleLog $ show id
 
-       Haste.App.onEvent editor OnKeyDown $ sendKey api
+       Haste.App.onEvent editor OnKeyPress $ sendKey api
 
        setProp editor "innerHTML" "0123456789"
 
@@ -52,7 +56,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        op_pool <- newHash "pool" :: Client (JSHash Int String)
 
        let storeInContent x = storeHash content (Editor.id x) x
-
+                              
        storeInContent wc_begin
        storeInContent wc_end
 
