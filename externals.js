@@ -12,9 +12,10 @@ function jsStoreHash(name,key,value) {
   hashName=unwrapPtr(name);
   hashKey=unwrapPtr(key);
   window[hashName][hashKey]=value;
-  console.log('store exit');
 }
 
-function jsReadHash(name,key,value) {
-  
+function jsReadHash(name,key) {
+  hashName=unwrapPtr(name);
+  hashKey=unwrapPtr(key);
+  return window[hashName][hashKey];
 }
