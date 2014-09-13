@@ -45,7 +45,10 @@ insertDummy = (Insert
                              previous_id = Mk_Id (-2,0) } )
 
 sendKey :: API -> Int -> Client ()
-sendKey api k = onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
+sendKey api k = do consoleLog "test"
+                   onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
+                   consoleLog "test2"
+
 
 test k = putStrLn "test"
 clientMain :: API -> Client ()
