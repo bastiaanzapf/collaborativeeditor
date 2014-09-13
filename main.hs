@@ -11,18 +11,11 @@ import JSHash
 import Editor
 import ConsoleLog
 import Profile
+import Server
 
 import Data.IORef
 import Control.Monad
 import Control.Applicative
-
-type State = (IORef [Int], IORef [String])
-
-data API = API {
-    apiHello :: Remote (Server Int),
-    apiSend :: Remote (Server () ),
-    apiAwait :: Remote (Server () )
-  }
 
 
 --newtype Id = Mk_Id (Int,Int) deriving (Eq, Show, Read)
@@ -63,9 +56,10 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        storeInContent wc_end
 
        seq <- subseq content id_Begin id_End
-       profile "eins" $ mergeIntoHash content wc3
-       profile "zwei" $ mergeIntoHash content wc2
-       profile "drei" $ mergeIntoHash content wc1
+
+       mergeIntoHash content wc3
+       mergeIntoHash content wc2
+       mergeIntoHash content wc1
 
        a <- subseq content id_Begin id_End
 
@@ -95,17 +89,6 @@ append ws str = withElems ["editor"] $
    \[editor] ->
    do  x<- getProp editor "innerHTML"
        setProp editor "innerHTML" (x ++ (fromJSStr str))
-
-hello :: Server State -> Server Int
-hello state = do liftIO $ putStrLn "hello"
-                 return 17
-
-await :: Server State -> Server ()
-await _ = do liftIO $ putStrLn "await"
-             return ()
-
-send :: Server State -> Server ()
-send _ = return ()
 
 -- | Launch the application!
 main :: IO ()
