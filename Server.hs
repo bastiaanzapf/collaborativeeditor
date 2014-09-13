@@ -15,9 +15,9 @@ import Operations
 type State = (IORef Int, IORef [(Int,C.MVar Operation)])
 
 data API = API {
-    apiHello :: Remote ( Server Int             ),
-    apiSend  :: Remote ( Operation -> Server () ),
-    apiAwait :: Remote ( Server ()              )
+    apiHello :: Remote ( Server Int          ),
+    apiSend  :: Remote ( String -> Server () ),
+    apiAwait :: Remote ( Server ()           )
   }
 
 hello :: Server State -> Server Int
@@ -33,8 +33,8 @@ await :: Server State -> Server ()
 await _ = do liftIO $ putStrLn "await"
              return ()
 
-send :: Server State -> Operation -> Server ()
-send state op = do
+send :: Server State -> String -> Server ()
+send state _ = do
   (clients,messages) <- state
   msgarray <- liftIO $ readIORef messages
   liftIO $ forM_ msgarray $ \x -> return ()

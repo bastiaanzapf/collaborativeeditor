@@ -44,11 +44,20 @@ insertDummy = (Insert
                              next_id = Mk_Id (-2,0),
                              previous_id = Mk_Id (-2,0) } )
 
-sendMsg :: API -> Int -> IO ()
-sendMsg api k = do case k of
-                     8 -> return ()
-                     _ -> return ()
-                   return ()
+sendInsert :: API -> Int -> Client ()
+sendInsert api k = onServer $ apiSend api <.> ""
+
+test k = putStrLn "test"
+
+meh :: API -> Int -> Client ()
+meh api k = do liftIO $ putStrLn "test"
+               onServer $ apiSend api <.> ""
+
+muh :: API -> Int -> Client ()
+muh api = \k -> do
+  case k of
+    8 -> return ()
+    _ -> meh api k
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
@@ -57,7 +66,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        id <- onServer $ apiHello api
        consoleLog $ show id               
 
-       editor `Haste.onEvent` OnKeyDown $ sendMsg api
+       Haste.App.onEvent editor OnKeyDown $ muh api
 
        setProp editor "innerHTML" "0123456789"
 
