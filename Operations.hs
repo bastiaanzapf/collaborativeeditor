@@ -29,6 +29,4 @@ insertDummy k = (Insert
 instance Binary Operation where
     put (Insert w_char) = putWord8 0 >> put w_char
     put (Delete w_char) = putWord8 1 >> put w_char
-    get = do x <- getWord8
-             return $ insertDummy $ fromInteger $ toInteger x
-             
+    get = return $ insertDummy (-30)

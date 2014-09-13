@@ -37,7 +37,7 @@ send :: Server State -> Operation -> Server ()
 send state op = do
   liftIO $ putStrLn "send"
   liftIO $ putStrLn $ show op
-  (clients,messages) <- state
-  msgarray <- liftIO $ readIORef messages
-  liftIO $ forM_ msgarray $ \x -> return ()
+--  (clients,messages) <- state
+--  msgarray <- liftIO $ readIORef messages
+--  liftIO $ forM_ msgarray $ \x -> return ()
 

@@ -48,7 +48,7 @@ sendKey :: API -> Int -> Client ()
 sendKey api k = do consoleLog "test"
                    case k of 
                      8 -> onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
-                     _ -> return () -- onServer $ apiSend api <.> (insertDummy)
+                     _ -> onServer $ apiSend api <.> (insertDummy)
                    consoleLog "test2"
 
 
