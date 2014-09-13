@@ -10,6 +10,7 @@ import Editor
 import ConsoleLog
 import Profile
 import Server
+import Operations
 
 import Data.IORef
 import Control.Applicative
@@ -38,9 +39,12 @@ testHash hash = do sequence $ map (showKey hash) [id_Begin,Mk_Id (1,1),Mk_Id (1,
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
+       setProp editor "contentEditable" "true"
 
        id <- onServer $ apiHello api
        consoleLog $ show id               
+
+       editor `Haste.onEvent` OnKeyDown $ \k -> putStrLn "keydown"
 
        setProp editor "innerHTML" "0123456789"
 
@@ -75,10 +79,6 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
                     return ()
                   in awaitLoop id
 
---       storeHash th "key" (8,3)
---       a <- readHash th "key"
---       x <- (getProp editor "innerHTML")
---       setProp editor "innerHTML" $ show x
        return ()
 
 
@@ -101,7 +101,7 @@ main = do
 
     -- Create an API object holding all available functions
     api <- API <$> remote (hello state)
-               <*> remote (send state)
+               <*> remote (send state $ Delete $ Mk_Id (-1,0))
                <*> remote (await state)
 
     -- Launch the client

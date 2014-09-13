@@ -8,8 +8,11 @@ import Haste
 import Haste.Prim
 import Haste.App
 import Haste.App.Concurrent
+import qualified Control.Concurrent as C
+import Control.Monad
+import Operations
 
-type State = (IORef Int, IORef [String])
+type State = (IORef Int, IORef [(Int,C.MVar Operation)])
 
 data API = API {
     apiHello :: Remote (Server Int),
@@ -30,5 +33,9 @@ await :: Server State -> Server ()
 await _ = do liftIO $ putStrLn "await"
              return ()
 
-send :: Server State -> Server ()
-send _ = return ()
+send :: Server State -> Operation -> Server ()
+send state op = do
+  (clients,messages) <- state
+  msgarray <- liftIO $ readIORef messages
+  liftIO $ forM_ msgarray $ \x -> return ()
+
