@@ -10,6 +10,7 @@ import Haste.WebSockets
 import JSHash
 import Editor
 import ConsoleLog
+import Profile
 
 import Data.IORef
 import Control.Monad
@@ -62,12 +63,9 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        storeInContent wc_end
 
        seq <- subseq content id_Begin id_End
-       consoleLog "eins"
-       mergeIntoHash content wc3
-       consoleLog "zwei"
-       mergeIntoHash content wc2
-       consoleLog "drei"
-       mergeIntoHash content wc1
+       profile "eins" $ mergeIntoHash content wc3
+       profile "zwei" $ mergeIntoHash content wc2
+       profile "drei" $ mergeIntoHash content wc1
 
        a <- subseq content id_Begin id_End
 
