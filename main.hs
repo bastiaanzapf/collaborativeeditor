@@ -1,9 +1,7 @@
 
 import Haste
-import Haste.Prim
 import Haste.App
 import Haste.App.Concurrent
-import Haste.Foreign
 
 import Haste.WebSockets
 
@@ -14,7 +12,6 @@ import Profile
 import Server
 
 import Data.IORef
-import Control.Monad
 import Control.Applicative
 
 
