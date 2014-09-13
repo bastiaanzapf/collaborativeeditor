@@ -95,7 +95,7 @@ main = do
   runApp (mkConfig "ws://localhost:24601" 24601) $ do
     -- Create our state-holding elements
     state <- liftServerIO $ do
-      clients <- newIORef []
+      clients <- newIORef 0
       messages <- newIORef []
       return (clients, messages)
 

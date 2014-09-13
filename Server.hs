@@ -9,7 +9,7 @@ import Haste.Prim
 import Haste.App
 import Haste.App.Concurrent
 
-type State = (IORef [Int], IORef [String])
+type State = (IORef Int, IORef [String])
 
 data API = API {
     apiHello :: Remote (Server Int),
@@ -18,8 +18,13 @@ data API = API {
   }
 
 hello :: Server State -> Server Int
-hello state = do liftIO $ putStrLn "hello"
-                 return 17
+hello state = do
+  do (clients,_) <- state
+     liftIO $ do 
+       putStrLn "hello"
+       count <- readIORef clients
+       writeIORef clients (count+1)
+       return (count+1)
 
 await :: Server State -> Server ()
 await _ = do liftIO $ putStrLn "await"
