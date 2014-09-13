@@ -15,9 +15,9 @@ import Operations
 type State = (IORef Int, IORef [(Int,C.MVar Operation)])
 
 data API = API {
-    apiHello :: Remote (Server Int),
-    apiSend :: Remote (Server () ),
-    apiAwait :: Remote (Server () )
+    apiHello :: Remote ( Server Int             ),
+    apiSend  :: Remote ( Operation -> Server () ),
+    apiAwait :: Remote ( Server ()              )
   }
 
 hello :: Server State -> Server Int

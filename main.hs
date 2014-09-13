@@ -37,6 +37,19 @@ showKey hash key = do x<-readHash hash key
 testHash hash = do sequence $ map (showKey hash) [id_Begin,Mk_Id (1,1),Mk_Id (1,2),Mk_Id (1,4),id_End]
                    return ()
 
+insertDummy = (Insert 
+               W_Character { Editor.id = Mk_Id (-2,0) , 
+                             literal = 'x' ,
+                             visible = True,
+                             next_id = Mk_Id (-2,0),
+                             previous_id = Mk_Id (-2,0) } )
+
+sendMsg :: API -> Int -> IO ()
+sendMsg api k = do case k of
+                     8 -> return ()
+                     _ -> return ()
+                   return ()
+
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
        setProp editor "contentEditable" "true"
@@ -44,7 +57,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        id <- onServer $ apiHello api
        consoleLog $ show id               
 
-       editor `Haste.onEvent` OnKeyDown $ \k -> putStrLn "keydown"
+       editor `Haste.onEvent` OnKeyDown $ sendMsg api
 
        setProp editor "innerHTML" "0123456789"
 
@@ -101,7 +114,7 @@ main = do
 
     -- Create an API object holding all available functions
     api <- API <$> remote (hello state)
-               <*> remote (send state $ Delete $ Mk_Id (-1,0))
+               <*> remote (send state)
                <*> remote (await state)
 
     -- Launch the client
