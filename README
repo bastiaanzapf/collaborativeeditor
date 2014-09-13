@@ -1,0 +1,12 @@
+
+These are sketches for a collaborative editor closely following
+suggestions taken from the paper "Real time group editors without
+Operational transformation" by Oster, Urso, Molli and Imine.
+
+On the base of hastec I established native functions for handling
+hashtables. These are a little involved, I think I will use
+conditional compilation to avoid using Ptr everywhere.
+
+The server does not actually do anything yet and the client is minimal
+at best, but core functions are implemented in Haskell and appear to
+work correctly.
