@@ -12,7 +12,8 @@ import ConsoleLog
 import JSEscape
 
 foreign import ccall jsNewHash :: Ptr JSString -> IO ()
-foreign import ccall jsStoreHash :: Ptr JSString -> Ptr JSString -> Ptr JSString -> IO ()
+foreign import ccall jsStoreHash :: Ptr JSString -> Ptr JSString -> Ptr a -> IO ()
+foreign import ccall jsReadHash :: Ptr JSString -> Ptr JSString -> IO (Ptr a)
 
 newtype JSHash a b = Mknt String deriving (Show,Read)
 
@@ -33,15 +34,15 @@ storeHash :: (Hashable key,Show key, Show a) => (JSHash key a) -> key -> a -> Cl
 storeHash (Mknt hash) key value = do
   let hashName = toPtr $ toJSStr hash
   let hashKey' = toPtr $ toJSStr $ hashKey key
-  let value'   = toPtr $ toJSStr $ show value
-  liftIO $ jsStoreHash hashName hashKey' value'
+  liftIO $ jsStoreHash hashName hashKey' $ toPtr value
 
 readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a,Show key ) => 
             (JSHash key a) -> key -> Client a
 readHash (Mknt hash) key = do 
-  let js = ("window." ++ hash ++ "['" ++ hashKey key ++ "']")
-  x <- liftIO $ ffi $ toJSStr js
-  return $ read x
+  let hashName = toPtr $ toJSStr hash
+  let hashKey' = toPtr $ toJSStr $ hashKey key
+  x <- liftIO $ jsReadHash hashName hashKey'
+  return $ fromPtr x
 
 push :: (Show b) => JSHash Int b -> b -> Client () 
 push (Mknt hash) value = do
