@@ -1,7 +1,7 @@
 
 development: stub.o main.js server
 
-server: main.hs JSHash.hs
+server: main.hs JSHash.hs Server.hs
 	ghc main.hs -o server stub.o
 
 stub.o: stub.c
