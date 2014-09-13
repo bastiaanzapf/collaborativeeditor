@@ -11,6 +11,9 @@ import Haste.App
 import ConsoleLog
 import JSEscape
 
+foreign import ccall jsNewHash :: Ptr JSString -> IO ()
+foreign import ccall jsStoreHash :: Ptr JSString -> Ptr JSString -> Ptr JSString -> IO ()
+
 newtype JSHash a b = Mknt String deriving (Show,Read)
 
 class Hashable a where
@@ -21,15 +24,17 @@ instance Show x => Hashable x where
 
 newHash :: String -> Client (JSHash key a)
 newHash str = do 
-  let js = ("window." ++ (str) ++ "=Array()") :: String
-  liftIO $ ffi $ toJSStr js :: Client ()
+  let hashName = toPtr $ toJSStr str
+  liftIO $ jsNewHash hashName
   return $ Mknt str
 
 
 storeHash :: (Hashable key,Show key, Show a) => (JSHash key a) -> key -> a -> Client ()
 storeHash (Mknt hash) key value = do
-  let js = ("window." ++ hash ++ "['" ++ hashKey key ++ "']=" ++ "'" ++(jsEscape $ show value) ++ "'")
-  liftIO $ ffi $ toJSStr js
+  let hashName = toPtr $ toJSStr hash
+  let hashKey' = toPtr $ toJSStr $ hashKey key
+  let value'   = toPtr $ toJSStr $ show value
+  liftIO $ jsStoreHash hashName hashKey' value'
 
 readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a,Show key ) => 
             (JSHash key a) -> key -> Client a
