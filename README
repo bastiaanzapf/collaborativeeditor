@@ -5,8 +5,9 @@ Operational transformation" by Oster, Urso, Molli and Imine.
 
 On the base of hastec I established native functions for handling
 hashtables. These are a little involved, I think I will use
-conditional compilation to avoid using Ptr everywhere.
+conditional compilation to avoid using Ptr everywhere. Ghc will give
+the error message "Unacceptable argument type" without.
 
 The server does not actually do anything yet and the client is minimal
 at best, but core functions are implemented in Haskell and appear to
-work correctly.
+work correctly and relatively quickly.
