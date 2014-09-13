@@ -37,18 +37,18 @@ showKey hash key = do x<-readHash hash key
 testHash hash = do sequence $ map (showKey hash) [id_Begin,Mk_Id (1,1),Mk_Id (1,2),Mk_Id (1,4),id_End]
                    return ()
 
-insertDummy = (Insert 
-               W_Character { Editor.id = Mk_Id (-2,0) , 
-                             literal = 'x' ,
-                             visible = True,
-                             next_id = Mk_Id (-2,0),
-                             previous_id = Mk_Id (-2,0) } )
+insertDummy k = (Insert 
+                   W_Character { Editor.id = Mk_Id (-2,0) , 
+                                 literal = toEnum k ,
+                                 visible = True,
+                                 next_id = Mk_Id (-2,0),
+                                 previous_id = Mk_Id (-2,0) } )
 
 sendKey :: API -> Int -> Client ()
 sendKey api k = do consoleLog "test"
                    case k of 
                      8 -> onServer $ apiSend api <.> (Delete $ Mk_Id (-3,0))
-                     _ -> onServer $ apiSend api <.> (insertDummy)
+                     _ -> onServer $ apiSend api <.> insertDummy k
                    consoleLog "test2"
 
 
