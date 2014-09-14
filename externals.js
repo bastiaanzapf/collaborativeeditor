@@ -1,23 +1,14 @@
 
-function unwrapPtr(value) {
-  return value.f.f().pop();
-}
-
 function jsNewHash(name) {
-  hashName=unwrapPtr(name);
-  window[hashName]=new Array();
+  window[name]=new Array();
 }
 
 function jsStoreHash(name,key,value) {
-  hashName=unwrapPtr(name);
-  hashKey=unwrapPtr(key);
-  window[hashName][hashKey]=value;
+  window[name][key]=value;
 }
 
 function jsReadHash(name,key) {
-  hashName=unwrapPtr(name);
-  hashKey=unwrapPtr(key);
-  return window[hashName][hashKey];
+  return window[name][key];
 }
 
 function jsInitKeypress(elem, cb) {
