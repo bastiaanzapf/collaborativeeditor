@@ -19,7 +19,7 @@ type State = (IORef [(SessionID,C.MVar Operation)],
 data API = API {
     apiHello :: Remote ( Server Int             ),
     apiSend  :: Remote ( Operation -> Server () ),
-    apiAwait :: Remote ( Server ()              )
+    apiAwait :: Remote ( Server Operation       )
   }
 
 
@@ -39,11 +39,16 @@ hello state = do
        atomicModifyIORef' clients (\x->(newconnection sid mvar x,()))
        return $ fromIntegral sid
 
-await :: Server State -> Server ()
-await _ = let awaitloop = do 
-                liftIO $ putStrLn "await"
-                return ()
-              in awaitloop
+await :: Server State -> Server Operation
+await state = do 
+  liftIO $ putStrLn "await"
+  (clients,_) <- state
+  clients' <- liftIO $ readIORef clients
+  sid <- getSessionID
+  let myvar = lookup sid clients'
+  case myvar of
+    Just mvar -> liftIO $ C.takeMVar mvar
+    _ -> error "Session not found"
 
 enqueue :: IORef (BankersDequeue Operation) -> Operation -> IO ()
 enqueue ioref op = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
@@ -51,14 +56,15 @@ enqueue ioref op = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
 send :: Server State -> Operation -> Server ()
 send state op = 
     do (clients,messages) <- state
+       sender <- getSessionID
        liftIO $ do
          putStrLn "send"
          putStrLn $ show op
          enqueue messages op
          q <- readIORef messages
          putStrLn $ "dequeue length: " ++ show (Data.Dequeue.length q)
-         return ()
---  msgarray <- liftIO $ readIORef messages
---  liftIO $ forM_ msgarray $ \x -> return ()
+         clients' <- readIORef clients
+         forM_ clients' $ \(_, v) -> C.forkIO $ C.putMVar v op
+
 
 

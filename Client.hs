@@ -93,9 +93,10 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        consoleLog x
 
        consoleLog "test"
-       fork $ let awaitLoop test = do 
+       fork $ let awaitLoop = do 
                     test <- onServer $ apiAwait api
-                    return ()
-                  in awaitLoop sessionid
+                    consoleLog "message received"
+                    awaitLoop
+                  in awaitLoop
 
        return ()
