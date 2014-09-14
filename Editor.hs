@@ -63,6 +63,7 @@ between wc1 wc2 wc = W_Character {WCharacter.id=WCharacter.id wc,
 
 mergeIntoHash hash wchar = 
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
+--       consoleLog $ show seq
        if seq == [] || tail seq == [] 
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)
