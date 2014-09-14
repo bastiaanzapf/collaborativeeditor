@@ -18,6 +18,10 @@ import Caret
 import Data.Char
 import Data.IORef
 
+data ClientState = ClientState { sentCounter   :: IORef Int ,
+                                 caretPosition :: IORef Int ,
+                                 contentLength :: IORef Int }
+
 id_Begin = Mk_Id (0,0)
 id_End   = Mk_Id (9999999,0)
 
@@ -40,9 +44,10 @@ insertWChar id k = (Insert
 
 increment k = (k+1,k)
 
-sendKey :: API -> Int -> IORef Int -> Char -> Client ()
-sendKey api station counter char = 
-    do count <- liftIO $ atomicModifyIORef' counter increment
+sendKey :: API -> Int -> ClientState -> Char -> Client ()
+sendKey api station state char = 
+    do let counter = sentCounter state
+       count <- liftIO $ atomicModifyIORef' counter increment
        consoleLog "sendKey"
        consoleLog $ show char
        onServer $ apiSend api <.> insertWChar (Mk_Id (station,count)) char
@@ -56,40 +61,49 @@ initialize api editor =
        consoleLog $ "Connected to server, session id " ++ (show id)
        counter <- newCounter
        caretposition <- newCounter
-       return (id,counter,caretposition)
+       clcounter <- newCounter
+       return $ ClientState { sentCounter=counter, 
+                              Client.caretPosition=caretposition,
+                              contentLength=clcounter }
 
-react :: Elem -> API -> IORef Int -> IORef Int -> Client ()
-react editor api counter caretposition = do 
-  p <- caretPosition editor
-  op <- liftIO $ readIORef caretposition
-  case p of
-    Just p' -> do liftIO $ writeIORef caretposition p'
-                  if (p' == op+1)
+data EventType = Character
+               | Clipboard
+               | Other
+
+react :: Elem -> API -> ClientState -> Client ()
+react editor api state = do 
+  editorPosition <- Caret.caretPosition editor :: Client (Maybe Int)
+  let clientPosition = Client.caretPosition state
+  oldEditorPosition <- liftIO $ readIORef $ clientPosition :: Client (Int)
+--  l <- contentLength editor
+  case editorPosition of
+    Just p' -> do liftIO $ writeIORef clientPosition p'
+                  if (p' == oldEditorPosition + 1)
                   then do c <- characterLeftOfCaret editor 
                           case c of
-                            Just c' ->  sendKey api 0 counter $ chr c'
+                            Just c' ->  sendKey api 0 state $ chr c'
                             Nothing ->  return ()
                   else return ()
     Nothing -> return ()
 
             
-mouse :: Elem -> API -> IORef Int -> IORef Int -> Int -> (Int,Int) -> Client ()
-mouse editor api counter caretposition k co = react editor api counter caretposition 
+mouse :: Elem -> API -> ClientState -> Int -> (Int,Int) -> Client ()
+mouse editor api state k co = react editor api state
 
-keyboard :: Elem -> API -> IORef Int -> IORef Int -> Int -> Client ()
-keyboard editor api counter caretposition k = react editor api counter caretposition 
+keyboard :: Elem -> API -> ClientState -> Int -> Client ()
+keyboard editor api state k = react editor api state
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
 
-       (sessionid,keycounter,caretposition) <- initialize api editor
+       clientstate <- initialize api editor
 
        let bindEditorEvent response evt = Haste.App.onEvent editor evt response
 
-       sequence_ $ map (bindEditorEvent (keyboard editor api keycounter caretposition))
+       sequence_ $ map (bindEditorEvent (keyboard editor api clientstate))
            [OnKeyUp,OnKeyDown,OnKeyPress]
 
-       sequence_ $ map (bindEditorEvent (mouse editor api keycounter caretposition))
+       sequence_ $ map (bindEditorEvent (mouse editor api clientstate))
                [OnClick,OnMouseUp,OnMouseDown]
 
        setProp editor "innerHTML" "0123456789"
