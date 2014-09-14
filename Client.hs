@@ -75,10 +75,14 @@ react editor api state = do
   editorPosition <- Caret.caretPosition editor :: Client (Maybe Int)
   let clientPosition = Client.caretPosition state
   oldEditorPosition <- liftIO $ readIORef $ clientPosition :: Client (Int)
---  l <- contentLength editor
+  l <- textLength editor
+  let textLength = contentLength state
+  oldTextLength <- liftIO $ readIORef $ textLength
   case editorPosition of
     Just p' -> do liftIO $ writeIORef clientPosition p'
-                  if (p' == oldEditorPosition + 1)
+                  liftIO $ writeIORef textLength l
+                  if (p' == oldEditorPosition + 1 &&
+                      l  == oldTextLength +1 )
                   then do c <- characterLeftOfCaret editor 
                           case c of
                             Just c' ->  sendKey api 0 state $ chr c'

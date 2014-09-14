@@ -50,3 +50,7 @@ function jsCharacterLeftOfCaret(o) {
     } else
        return [0];
 }
+
+function jsTextLength(o) {
+   return o.textContent.length;
+}

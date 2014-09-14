@@ -1,7 +1,7 @@
 
 {-# LANGUAGE CPP #-}
 
-module Caret (caretPosition,characterLeftOfCaret) where
+module Caret ( caretPosition, characterLeftOfCaret, textLength ) where
 
 import Haste
 import Haste.Prim
@@ -14,14 +14,18 @@ import Haste.Foreign
 
 foreign import ccall jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))
 foreign import ccall jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Int))
+foreign import ccall jsTextLength :: Elem -> IO Int
 
 #else
 
 jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))
-jsCaretPosition = error "jsNewHash called on server side"
+jsCaretPosition = error "jsCaretPosition called on server side"
 
 jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Int))
-jsCharacterLeftOfCaret = error "jsNewHash called on server side"
+jsCharacterLeftOfCaret = error "jsCharacterLeftOfCaret called on server side"
+
+jsTextLength :: Elem -> IO Int
+jsTextLength = error "jsTextLength called on server side"
 
 #endif
 
@@ -30,3 +34,6 @@ caretPosition elem = do x <- liftIO $ jsCaretPosition elem
 
 characterLeftOfCaret elem = do x <- liftIO $ jsCharacterLeftOfCaret elem
                                return $ fromPtr x
+
+textLength elem = do x <- liftIO $ jsTextLength elem
+                     return x
