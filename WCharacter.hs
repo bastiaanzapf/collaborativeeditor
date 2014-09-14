@@ -31,13 +31,17 @@ instance Binary W_Character where
                     putWord32le $ fromIntegral $ ord $ literal w_char
                     if (visible w_char) then putWord8 1
                                         else putWord8 0
+                    put $ previous_id w_char
+                    put $ next_id w_char
     get = do x <- getWord8
              id' <- get
              lit <- getWord32le
              visible <- getWord8
+             p_id <- get
+             n_id <- get
              return $ W_Character {WCharacter.id=id',
                                    visible=True,
                                    literal=toEnum $ fromEnum lit,
-                                   next_id=Mk_Id (-19,0),
-                                   previous_id=Mk_Id (-20,0)
+                                   next_id=n_id,
+                                   previous_id=p_id
                                   }
