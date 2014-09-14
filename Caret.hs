@@ -13,14 +13,14 @@ import Haste.Foreign
 #ifdef __HASTE__
 
 foreign import ccall jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))
-foreign import ccall jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Char))
+foreign import ccall jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Int))
 
 #else
 
 jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))
 jsCaretPosition = error "jsNewHash called on server side"
 
-jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Char))
+jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Int))
 jsCharacterLeftOfCaret = error "jsNewHash called on server side"
 
 #endif

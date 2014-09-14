@@ -44,7 +44,7 @@ function jsCharacterLeftOfCaret(o) {
     if (sel.anchorNode.parentNode==o) {
        var pos = sel.anchorOffset; 
        if (pos>0)
-           return [1,[0,o.textContent.substr(pos-1,1)]];
+           return [1,[0,o.textContent.charCodeAt(pos-1)]];
        else
            return [0]
     } else

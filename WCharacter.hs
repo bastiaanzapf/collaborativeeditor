@@ -28,12 +28,12 @@ instance Unpack W_Character where
 instance Binary W_Character where
     put w_char = do putWord8 0
                     put $ WCharacter.id w_char
-                    putWord8 $ fromIntegral $ ord $ literal w_char
+                    putWord32le $ fromIntegral $ ord $ literal w_char
                     if (visible w_char) then putWord8 1
                                         else putWord8 0
     get = do x <- getWord8
              id' <- get
-             lit <- getWord8
+             lit <- getWord32le
              visible <- getWord8
              return $ W_Character {WCharacter.id=id',
                                    visible=True,

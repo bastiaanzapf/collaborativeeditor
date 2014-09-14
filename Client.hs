@@ -61,7 +61,7 @@ react :: Elem -> API -> Int -> IORef Int -> Client ()
 react editor api station counter = do 
   c <- characterLeftOfCaret editor 
   case c of
-    Just c' ->  sendKey api station counter c'
+    Just c' ->  sendKey api station counter $ chr c'
     Nothing ->  return ()
 
 mouse :: Elem -> API -> Int -> IORef Int -> Int -> (Int,Int) -> Client ()
