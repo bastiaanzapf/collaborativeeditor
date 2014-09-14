@@ -14,6 +14,7 @@ import Editor
 import Operations
 import Server
 import Caret
+import Visible
 
 import Data.Char
 import Data.IORef
@@ -53,9 +54,14 @@ sendKey api station state char previous next =
        consoleLog "sendKey"
        consoleLog $ show char
 
-       let insert = insertWChar (Mk_Id (station,count)) char
+       hash <- liftIO $ readIORef $ contentHash state
+
+       let insert = insertWChar (Mk_Id (station+1000,count)) char
                     (Editor.id previous) (Editor.id next)
 
+       case insert of
+         Insert wchar -> mergeIntoHash hash wchar
+         Delete _ -> error "Delete instead of Insert in sendKey"
        onServer $ apiSend api <.> insert
 
 newCounter :: Client (IORef Int)
@@ -89,10 +95,11 @@ react editor api state = do
     Just p' -> do liftIO $ writeIORef clientPosition p'
                   liftIO $ writeIORef textLength l
                   hash <- liftIO $ readIORef $ contentHash state
-                  previous <- visibleAt hash (oldEditorPosition-1)
-                  next <- visibleAt hash (oldEditorPosition+1)
-                  consoleLog $ show previous
-                  consoleLog $ show next
+                  -- Achtung! die Hash wurde noch nicht modifiziert
+                  previous <- visibleAt hash (p'-1)
+                  next <- visibleAt hash p'
+--                  consoleLog $ show previous
+--                  consoleLog $ show next
                   case (previous,next) of
                     (Just previous,Just next) -> 
                         if (p' == oldEditorPosition + 1 &&
@@ -112,47 +119,6 @@ mouse editor api state k co = react editor api state
 
 keyboard :: Elem -> API -> ClientState -> Int -> Client ()
 keyboard editor api state k = react editor api state
-
-visible' :: JSHash Id W_Character -> Id -> Client [Char]
-visible' hash id = do 
-  if id == id_End
-  then return []
-  else do x <- readHash hash id
-          case x of
-            Just wchar -> do tail <- visible' hash (next_id wchar)
-                             if Editor.visible wchar
-                             then return $ literal wchar : tail
-                             else return $ tail
-            Nothing    -> error $ "Did not find id " ++ 
-                          show id ++
-                          " in hash."
-                      
-
-visible :: JSHash Id W_Character -> Client [Char]
-visible hash = visible' hash id_Begin
-
-visibleAt' hash id position = do 
-  if id == id_End
-  then return $ Just wc_end
-  else if position == 0
-       then readHash hash id
-       else do 
-         consoleLog $ show position
-         consoleLog $ show id
-         x <- readHash hash id
-         case x of
-           Just wchar -> do if Editor.visible wchar
-                            then visibleAt' hash (next_id wchar) 
-                                 (position-1)
-                            else visibleAt' hash (next_id wchar) 
-                                 position
-           Nothing    -> error $ "Did not find id " ++ 
-                         show id ++
-                        " in hash (visibleAt)."
-
-visibleAt :: JSHash Id W_Character -> Int -> Client (Maybe W_Character)
-visibleAt hash position = visibleAt' hash id_Begin position
-
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
@@ -182,11 +148,21 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
 
        mergeIntoHash content wc3
        mergeIntoHash content wc2
-       mergeIntoHash content wc1
+       mergeIntoHash content wc1       
 
+       readHash content id_Begin >>= consoleLog . show
+       readHash content (Mk_Id (1,1)) >>= consoleLog . show
+       readHash content (Mk_Id (1,2)) >>= consoleLog . show
+       readHash content (Mk_Id (1,4)) >>= consoleLog . show
+       readHash content id_End  >>= consoleLog . show
+{-
+       visibleAt content 0 >>= consoleLog . show
+       visibleAt content 1 >>= consoleLog . show
+       visibleAt content 2 >>= consoleLog . show       
+-}
        a <- subseq content id_Begin id_End
 
-       initialcontent <- Client.visible content
+       initialcontent <- Visible.visible content
        setProp editor "innerHTML" initialcontent
 
        consoleLog $ map literal a
