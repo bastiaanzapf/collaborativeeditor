@@ -16,32 +16,42 @@ data Operation = Insert Id Char Id Id
 operation_to_wchar (Insert a b c d) = 
     W_Character { WCharacter.id=a, visible=True, literal=b, previous_id=c, next_id=d }
 
-subseq :: (JSHash Id W_Character) -> Id -> Id -> Client [ W_Character ]
-subseq hash previous next = do if previous == next 
-                               then return []
-                               else do hd <- readHash hash previous
-                                       tl <- (subseq hash (next_id hd) next)
-                                       return (hd:tl)
+subseq :: (JSHash Id W_Character) -> Id -> Id -> Client ( [ W_Character ])
+subseq hash previous next = do 
+  if previous == next 
+  then return []
+  else do hd <- readHash hash previous
+          case hd of
+            Just hd' -> do tl <- (subseq hash (next_id hd') next)
+                           return (hd':tl)
+            Nothing  -> error "Wchar not found in subseq"
+
+insert' hash previous next wchar = do
+  let storeWithId x = storeHash hash (WCharacter.id x) x
+
+  storeWithId $ W_Character {WCharacter.id=WCharacter.id previous,
+                             visible=visible previous,
+                             literal=literal previous,
+                             previous_id=previous_id previous,
+                             next_id=WCharacter.id wchar}
+
+  storeWithId wchar
+
+  storeWithId $ W_Character {WCharacter.id=WCharacter.id next,
+                             visible=visible next,
+                             literal=literal next,
+                             previous_id=WCharacter.id wchar,
+                             next_id=next_id next}
 
 insert hash previous_id next_id wchar =
     do previous <- readHash hash $ previous_id wchar
        next     <- readHash hash $ next_id     wchar
 
-       let storeWithId x = storeHash hash (WCharacter.id x) x
+       case (previous,next) of
+         (Just previous, Just next) -> do insert' hash previous next wchar
+         _ -> error "WCharacter not found in insert"
 
-       storeWithId $ W_Character {WCharacter.id=WCharacter.id previous,
-                                  visible=visible previous,
-                                  literal=literal previous,
-                                  previous_id=previous_id previous,
-                                  next_id=WCharacter.id wchar}
 
-       storeWithId wchar
-
-       storeWithId $ W_Character {WCharacter.id=WCharacter.id next,
-                                  visible=visible next,
-                                  literal=literal next,
-                                  previous_id=WCharacter.id wchar,
-                                  next_id=next_id next}
 
 
 findPosition (hwc:hwc2:twc) wc = if (WCharacter.id wc)<=(WCharacter.id hwc2)
@@ -61,7 +71,10 @@ mergeIntoHash hash wchar =
     do seq <- subseq hash (previous_id wchar) (next_id wchar)
        if seq == [] || tail seq == [] 
        then insert hash previous_id next_id wchar
-       else do next <- readHash hash (next_id wchar)               
-               let inclseq = seq ++ [ next ]
-               let (a,b) = findPosition inclseq wchar               
-               mergeIntoHash hash (between a b wchar)
+       else do next <- readHash hash (next_id wchar)
+               case next of
+                 Just a -> do let inclseq = seq ++ [ a ]
+                              let (a,b) = findPosition inclseq wchar
+                              mergeIntoHash hash (between a b wchar)
+
+                 Nothing -> error "mergeIntoHash: next wchar not found"

@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE CPP #-}
 
-module JSHash (JSHash, newHash, storeHash, readHash, push, pop) where
+module JSHash (JSHash, jsTest, newHash, storeHash, readHash, push, pop) where
 
 import Haste.Prim
 import Haste.Foreign
@@ -16,7 +16,8 @@ import JSEscape
 
 foreign import ccall jsNewHash :: JSString -> IO ()
 foreign import ccall jsStoreHash :: JSString -> JSString -> Ptr a -> IO ()
-foreign import ccall jsReadHash :: JSString -> JSString -> IO (Ptr a)
+foreign import ccall jsReadHash :: JSString -> JSString -> IO (Ptr (Maybe a))
+foreign import ccall jsTest :: Ptr (Maybe Int) -> IO (Ptr (Maybe Int))
 
 #else
 
@@ -26,8 +27,11 @@ jsNewHash = error "jsNewHash called on server side"
 jsStoreHash :: JSString -> JSString -> Ptr a -> IO ()
 jsStoreHash = error "jsStoreHash called on server side"
 
-jsReadHash :: JSString -> JSString -> IO (Ptr a)
+jsReadHash :: JSString -> JSString -> IO (Ptr (Maybe a))
 jsReadHash = error "jsReadHash called on server side"
+
+jsTest :: Ptr (Maybe Int) -> IO (Ptr (Maybe Int))
+jsTest = error "jsTest called on server side"
 
 #endif
 
@@ -53,7 +57,7 @@ storeHash (Mknt hash) key value = do
   liftIO $ jsStoreHash hashName hashKey' $ toPtr value
 
 readHash :: (Hashable key, Unpack a,Pack a, Read a,Show a,Show key ) => 
-            (JSHash key a) -> key -> Client a
+            (JSHash key a) -> key -> Client (Maybe a)
 readHash (Mknt hash) key = do 
   let hashName = toJSStr hash
   let hashKey' = toJSStr $ hashKey key

@@ -94,9 +94,15 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
 
        consoleLog "test"
        fork $ let awaitLoop = do 
-                    test <- onServer $ apiAwait api
+                    op <- onServer $ apiAwait api
+
                     consoleLog "message received"
+                    case op of
+                      Insert wchar -> do mergeIntoHash content wchar
+                                         consoleLog $ show wchar
+                      Delete id -> consoleLog "delete not implemented yet"
                     awaitLoop
+
                   in awaitLoop
 
        return ()

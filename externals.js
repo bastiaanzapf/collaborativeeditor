@@ -8,7 +8,11 @@ function jsStoreHash(name,key,value) {
 }
 
 function jsReadHash(name,key) {
-  return window[name][key];
+  x=window[name][key];
+  if (typeof x == 'undefined')
+    return [0]
+  else
+    return [1,x]
 }
 
 function jsInitKeypress(elem, cb) {
@@ -18,4 +22,9 @@ function jsInitKeypress(elem, cb) {
 
   elem.addEventListener('keypress', function(e) { fun(e) }, false);
   return true; 
+}
+
+function jsTest(test) {
+console.log(test);
+return [0]
 }
