@@ -28,3 +28,25 @@ function jsTest(test) {
 console.log(test);
 return [0]
 }
+
+// Handle caret
+
+function jsCaretPosition(o) {
+    var sel = window.getSelection();
+    if (sel.anchorNode.parentNode==o)
+       return [1,[0,sel.anchorOffset]];
+    else
+       return [0];
+}
+
+function jsCharacterLeftOfCaret(o) {
+    var sel = window.getSelection();
+    if (sel.anchorNode.parentNode==o) {
+       var pos = sel.anchorOffset; 
+       if (pos>0)
+           return [1,[0,o.textContent.substr(pos-1,1)]];
+       else
+           return [0]
+    } else
+       return [0];
+}

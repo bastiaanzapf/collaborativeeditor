@@ -10,12 +10,6 @@ import JSHash
 import ConsoleLog
 import WCharacter
 
-data Operation = Insert Id Char Id Id
-               | Delete Id
-
-operation_to_wchar (Insert a b c d) = 
-    W_Character { WCharacter.id=a, visible=True, literal=b, previous_id=c, next_id=d }
-
 subseq :: (JSHash Id W_Character) -> Id -> Id -> Client ( [ W_Character ])
 subseq hash previous next = do 
   if previous == next 

@@ -13,6 +13,7 @@ import JSHash
 import Editor
 import Operations
 import Server
+import Caret
 
 import Data.Char
 import Data.IORef
@@ -32,19 +33,19 @@ wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id
 
 insertWChar id k = (Insert 
                    W_Character { Editor.id = id , 
-                                 literal = chr k ,
+                                 literal = k ,
                                  visible = True,
                                  next_id = Mk_Id (-2,0),
                                  previous_id = Mk_Id (-2,0) } )
 
 increment k = (k+1,k)
 
-sendKey :: API -> Int -> IORef Int -> Int -> Client ()
-sendKey api station counter k = 
-    do count <- liftIO $ atomicModifyIORef counter increment
+sendKey :: API -> Int -> IORef Int -> Char -> Client ()
+sendKey api station counter char = 
+    do count <- liftIO $ atomicModifyIORef' counter increment
        consoleLog "sendKey"
-       consoleLog $ show k
-       onServer $ apiSend api <.> insertWChar (Mk_Id (station,count)) k
+       consoleLog $ show char
+       onServer $ apiSend api <.> insertWChar (Mk_Id (station,count)) char
 
 newCounter :: Client (IORef Int)
 newCounter = liftIO $ newIORef 0
@@ -56,14 +57,31 @@ initialize api editor =
        counter <- newCounter
        return (id,counter)
 
+react :: Elem -> API -> Int -> IORef Int -> Client ()
+react editor api station counter = do 
+  c <- characterLeftOfCaret editor 
+  case c of
+    Just c' ->  sendKey api station counter c'
+    Nothing ->  return ()
+
+mouse :: Elem -> API -> Int -> IORef Int -> Int -> (Int,Int) -> Client ()
+mouse editor api station counter k co = react editor api station counter
+
+keyboard :: Elem -> API -> Int -> IORef Int -> Int -> Client ()
+keyboard editor api station counter k = react editor api station counter
+
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
 
        (sessionid,keycounter) <- initialize api editor
 
-       let bindEditorKeypress = Haste.App.onEvent editor OnKeyPress
+       let bindEditorEvent response evt = Haste.App.onEvent editor evt response
 
-       bindEditorKeypress (sendKey api sessionid keycounter)
+       sequence_ $ map (bindEditorEvent (keyboard editor api sessionid keycounter))
+           [OnKeyUp,OnKeyDown,OnKeyPress]
+
+       sequence_ $ map (bindEditorEvent (mouse editor api sessionid keycounter))
+               [OnClick,OnMouseUp,OnMouseDown]
 
        setProp editor "innerHTML" "0123456789"
 
