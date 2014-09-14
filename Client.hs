@@ -57,18 +57,18 @@ initialize api editor =
        counter <- newCounter
        return (id,counter)
 
-react :: Elem -> API -> Int -> IORef Int -> Client ()
-react editor api station counter = do 
+react :: Elem -> API -> IORef Int -> Client ()
+react editor api counter = do 
   c <- characterLeftOfCaret editor 
   case c of
-    Just c' ->  sendKey api station counter $ chr c'
+    Just c' ->  sendKey api 0 counter $ chr c'
     Nothing ->  return ()
 
-mouse :: Elem -> API -> Int -> IORef Int -> Int -> (Int,Int) -> Client ()
-mouse editor api station counter k co = react editor api station counter
+mouse :: Elem -> API -> IORef Int -> Int -> (Int,Int) -> Client ()
+mouse editor api counter k co = react editor api counter
 
-keyboard :: Elem -> API -> Int -> IORef Int -> Int -> Client ()
-keyboard editor api station counter k = react editor api station counter
+keyboard :: Elem -> API -> IORef Int -> Int -> Client ()
+keyboard editor api counter k = react editor api counter
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
@@ -77,10 +77,10 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
 
        let bindEditorEvent response evt = Haste.App.onEvent editor evt response
 
-       sequence_ $ map (bindEditorEvent (keyboard editor api sessionid keycounter))
+       sequence_ $ map (bindEditorEvent (keyboard editor api keycounter))
            [OnKeyUp,OnKeyDown,OnKeyPress]
 
-       sequence_ $ map (bindEditorEvent (mouse editor api sessionid keycounter))
+       sequence_ $ map (bindEditorEvent (mouse editor api keycounter))
                [OnClick,OnMouseUp,OnMouseDown]
 
        setProp editor "innerHTML" "0123456789"
