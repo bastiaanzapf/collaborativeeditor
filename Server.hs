@@ -21,9 +21,6 @@ data API = API {
     apiAwait :: Remote ( Server ()              )
   }
 
-enqueue :: Operation ->  IORef (BankersDequeue Operation) -> IO ()
-enqueue op ioref = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
-
 hello :: Server State -> Server Int
 hello state = do
   do (clients,_) <- state
@@ -37,12 +34,19 @@ await :: Server State -> Server ()
 await _ = do liftIO $ putStrLn "await"
              return ()
 
+enqueue :: IORef (BankersDequeue Operation) -> Operation -> IO ()
+enqueue ioref op = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
+
 send :: Server State -> Operation -> Server ()
-send state op = do
-  liftIO $ putStrLn "send"
-  liftIO $ putStrLn $ show op
-  (clients,messages) <- state
-  return ()
+send state op = 
+    do (clients,messages) <- state
+       liftIO $ do
+         putStrLn "send"
+         putStrLn $ show op
+         enqueue messages op
+         q <- readIORef messages
+         putStrLn $ "dequeue length: " ++ show (Data.Dequeue.length q)
+         return ()
 --  msgarray <- liftIO $ readIORef messages
 --  liftIO $ forM_ msgarray $ \x -> return ()
 
