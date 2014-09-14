@@ -55,32 +55,41 @@ initialize api editor =
        id <- onServer $ apiHello api
        consoleLog $ "Connected to server, session id " ++ (show id)
        counter <- newCounter
-       return (id,counter)
+       caretposition <- newCounter
+       return (id,counter,caretposition)
 
-react :: Elem -> API -> IORef Int -> Client ()
-react editor api counter = do 
-  c <- characterLeftOfCaret editor 
-  case c of
-    Just c' ->  sendKey api 0 counter $ chr c'
-    Nothing ->  return ()
+react :: Elem -> API -> IORef Int -> IORef Int -> Client ()
+react editor api counter caretposition = do 
+  p <- caretPosition editor
+  op <- liftIO $ readIORef caretposition
+  case p of
+    Just p' -> do liftIO $ writeIORef caretposition p'
+                  if (p' == op+1)
+                  then do c <- characterLeftOfCaret editor 
+                          case c of
+                            Just c' ->  sendKey api 0 counter $ chr c'
+                            Nothing ->  return ()
+                  else return ()
+    Nothing -> return ()
 
-mouse :: Elem -> API -> IORef Int -> Int -> (Int,Int) -> Client ()
-mouse editor api counter k co = react editor api counter
+            
+mouse :: Elem -> API -> IORef Int -> IORef Int -> Int -> (Int,Int) -> Client ()
+mouse editor api counter caretposition k co = react editor api counter caretposition 
 
-keyboard :: Elem -> API -> IORef Int -> Int -> Client ()
-keyboard editor api counter k = react editor api counter
+keyboard :: Elem -> API -> IORef Int -> IORef Int -> Int -> Client ()
+keyboard editor api counter caretposition k = react editor api counter caretposition 
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
 
-       (sessionid,keycounter) <- initialize api editor
+       (sessionid,keycounter,caretposition) <- initialize api editor
 
        let bindEditorEvent response evt = Haste.App.onEvent editor evt response
 
-       sequence_ $ map (bindEditorEvent (keyboard editor api keycounter))
+       sequence_ $ map (bindEditorEvent (keyboard editor api keycounter caretposition))
            [OnKeyUp,OnKeyDown,OnKeyPress]
 
-       sequence_ $ map (bindEditorEvent (mouse editor api keycounter))
+       sequence_ $ map (bindEditorEvent (mouse editor api keycounter caretposition))
                [OnClick,OnMouseUp,OnMouseDown]
 
        setProp editor "innerHTML" "0123456789"
