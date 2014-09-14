@@ -46,16 +46,24 @@ sendKey api station counter k =
        consoleLog $ show k
        onServer $ apiSend api <.> insertWChar (Mk_Id (station,count)) k
 
-clientMain :: API -> Client ()
-clientMain api = withElems ["editor"] $ \[editor] -> do 
-       setProp editor "contentEditable" "true"
+newCounter :: Client (IORef Int)
+newCounter = liftIO $ newIORef 0
 
+initialize api editor = 
+    do setProp editor "contentEditable" "true"
        id <- onServer $ apiHello api
-       consoleLog $ show id
+       consoleLog $ "Connected to server, session id " ++ (show id)
+       counter <- newCounter
+       return (id,counter)
 
-       counter <- liftIO $ newIORef 0 :: Client (IORef Int)
+clientMain :: API -> Client ()
+clientMain api = withElems ["editor"] $ \[editor] -> do       
 
-       Haste.App.onEvent editor OnKeyPress $ sendKey api id counter
+       (sessionid,keycounter) <- initialize api editor
+
+       let bindEditorKeypress = Haste.App.onEvent editor OnKeyPress
+
+       bindEditorKeypress (sendKey api sessionid keycounter)
 
        setProp editor "innerHTML" "0123456789"
 
@@ -88,6 +96,6 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        fork $ let awaitLoop test = do 
                     test <- onServer $ apiAwait api
                     return ()
-                  in awaitLoop id
+                  in awaitLoop sessionid
 
        return ()
