@@ -12,6 +12,7 @@ import qualified Control.Concurrent as C
 import Control.Monad
 import Operations
 import Data.Dequeue
+import WCharacter
 
 type State = (IORef [(SessionID,C.MVar Operation)], 
               IORef (BankersDequeue Operation) )
@@ -57,14 +58,25 @@ send :: Server State -> Operation -> Server ()
 send state op = 
     do (clients,messages) <- state
        sender <- getSessionID
+       let op' = case op of
+             Insert wchar -> Insert $ W_Character 
+                 { WCharacter.id = Mk_Id (fromIntegral sender,
+                                          case WCharacter.id wchar of
+                                            Mk_Id (_,x) -> x),
+                   literal = literal wchar,
+                   visible = True,
+                   next_id = next_id wchar,
+                   previous_id = previous_id wchar
+                 }
+             Delete id -> Delete id
        liftIO $ do
          putStrLn "send"
-         putStrLn $ show op
-         enqueue messages op
+         putStrLn $ show op'
+         enqueue messages op'
          q <- readIORef messages
          putStrLn $ "dequeue length: " ++ show (Data.Dequeue.length q)
          clients' <- readIORef clients
-         forM_ clients' $ \(_, v) -> C.forkIO $ C.putMVar v op
+         forM_ clients' $ \(_, v) -> C.forkIO $ C.putMVar v op'
 
 
 
