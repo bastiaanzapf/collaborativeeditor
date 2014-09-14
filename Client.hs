@@ -15,6 +15,7 @@ import Operations
 import Server
 
 import Data.Char
+import Data.IORef
 
 id_Begin = Mk_Id (0,0)
 id_End   = Mk_Id (9999999,0)
@@ -29,17 +30,21 @@ wc2 = W_Character {Editor.id=Mk_Id (1,2),visible=True,literal='b',previous_id=id
 wc3 = W_Character {Editor.id=Mk_Id (1,4),visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
 
-insertDummy k = (Insert 
-                   W_Character { Editor.id = Mk_Id (-2,0) , 
+insertWChar id k = (Insert 
+                   W_Character { Editor.id = id , 
                                  literal = chr k ,
                                  visible = True,
                                  next_id = Mk_Id (-2,0),
                                  previous_id = Mk_Id (-2,0) } )
 
-sendKey :: API -> Int -> Client ()
-sendKey api k = do consoleLog "sendKey"
-                   consoleLog $ show k
-                   onServer $ apiSend api <.> insertDummy k
+increment k = (k+1,k)
+
+sendKey :: API -> Int -> IORef Int -> Int -> Client ()
+sendKey api station counter k = 
+    do count <- liftIO $ atomicModifyIORef counter increment
+       consoleLog "sendKey"
+       consoleLog $ show k
+       onServer $ apiSend api <.> insertWChar (Mk_Id (station,count)) k
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do 
@@ -48,7 +53,9 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        id <- onServer $ apiHello api
        consoleLog $ show id
 
-       Haste.App.onEvent editor OnKeyPress $ sendKey api
+       counter <- liftIO $ newIORef 0 :: Client (IORef Int)
+
+       Haste.App.onEvent editor OnKeyPress $ sendKey api id counter
 
        setProp editor "innerHTML" "0123456789"
 
