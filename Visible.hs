@@ -32,14 +32,14 @@ visible :: JSHash Id W_Character -> Client [Char]
 visible hash = visible' hash id_Begin
 
 visibleAt' hash id position = do 
+--  consoleLog $ show position
   if id == id_End
-  then if position == 0 
+  then if position == 0
        then return $ Just wc_end
        else error "Hash exceeded in visibleAt"
   else if position == 0
        then readHash hash id
        else do 
---         consoleLog $ show position
 --         consoleLog $ show id
          x <- readHash hash id
          case x of
@@ -54,9 +54,12 @@ visibleAt' hash id position = do
                         " in hash (visibleAt)."
 
 visibleAt :: JSHash Id W_Character -> Int -> Client (Maybe W_Character)
-visibleAt hash position = 
-    if position >= 0
-    then visibleAt' hash id_Begin position
-    else if position == -1
-         then return $ Just wc_begin
-         else return Nothing
+visibleAt hash position = do
+  first <- readHash hash id_Begin
+  case first of
+    Just first' ->  if position >= 0
+                    then visibleAt' hash (next_id first') position
+                    else if position == -1
+                         then return $ Just wc_begin
+                         else return Nothing
+    Nothing -> error "Begin not found"

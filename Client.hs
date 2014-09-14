@@ -37,13 +37,12 @@ wc2 = W_Character {Editor.id=Mk_Id (1,2),Editor.visible=True,literal='b',previou
 wc3 = W_Character {Editor.id=Mk_Id (1,4),Editor.visible=True,literal='c',previous_id=id_Begin,next_id=id_End}
 
 
-insertWChar id k previous next = 
-  (Insert 
+makeWChar id k previous next = 
      W_Character { Editor.id = id , 
                    literal = k ,
                    Editor.visible = True,
                    next_id = next,
-                   previous_id = previous } )
+                   previous_id = previous }
 
 increment k = (k+1,k)
 
@@ -56,13 +55,12 @@ sendKey api station state char previous next =
 
        hash <- liftIO $ readIORef $ contentHash state
 
-       let insert = insertWChar (Mk_Id (0,count)) char
+       let insert = makeWChar (Mk_Id (0,count)) char
                     (Editor.id previous) (Editor.id next)
 
-       case insert of
-         Insert wchar -> mergeIntoHash hash wchar
-         Delete _ -> error "Delete instead of Insert in sendKey"
-       onServer $ apiSend api <.> insert
+       mergeIntoHash hash insert
+
+       onServer $ apiSend api <.> Insert insert
 
 newCounter :: Client (IORef Int)
 newCounter = liftIO $ newIORef 0
@@ -96,10 +94,11 @@ react editor api state = do
                   liftIO $ writeIORef textLength l
                   hash <- liftIO $ readIORef $ contentHash state
                   -- Achtung! die Hash wurde noch nicht modifiziert
-                  previous <- visibleAt hash (p'-1)
-                  next <- visibleAt hash p'
---                  consoleLog $ show previous
---                  consoleLog $ show next
+                  consoleLog $ "suche Position " ++ (show p')
+                  previous <- visibleAt hash (p'-2)
+                  next <- visibleAt hash (p'-1)
+                  consoleLog $ show previous
+                  consoleLog $ show next
                   case (previous,next) of
                     (Just previous,Just next) -> 
                         if (p' == oldEditorPosition + 1 &&
@@ -161,6 +160,14 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        mergeIntoHash content wc1       
 
        a <- subseq content id_Begin id_End
+
+       consoleLog "5:"
+
+       visibleAt content (-1) >>= consoleLog . show
+       visibleAt content 0 >>= consoleLog . show
+       visibleAt content 1 >>= consoleLog . show                 
+       visibleAt content 2 >>= consoleLog . show                 
+       visibleAt content 3 >>= consoleLog . show                 
 
        initialcontent <- Visible.visible content
        setProp editor "innerHTML" initialcontent

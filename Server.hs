@@ -60,7 +60,7 @@ send state op =
        sender <- getSessionID
        let op' = case op of
              Insert wchar -> Insert $ W_Character 
-                 { WCharacter.id = Mk_Id (fromIntegral sender,
+                 { WCharacter.id = Mk_Id (fromIntegral sender `mod` 65536,
                                           case WCharacter.id wchar of
                                             Mk_Id (_,x) -> x),
                    literal = literal wchar,
