@@ -11,14 +11,18 @@ import Haste.App.Concurrent
 import qualified Control.Concurrent as C
 import Control.Monad
 import Operations
+import Data.Dequeue
 
-type State = (IORef Int, IORef [(Int,C.MVar Operation)])
+type State = (IORef Int, IORef (BankersDequeue Operation))
 
 data API = API {
     apiHello :: Remote ( Server Int             ),
     apiSend  :: Remote ( Operation -> Server () ),
     apiAwait :: Remote ( Server ()              )
   }
+
+enqueue :: Operation ->  IORef (BankersDequeue Operation) -> IO ()
+enqueue op ioref = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
 
 hello :: Server State -> Server Int
 hello state = do
@@ -37,7 +41,9 @@ send :: Server State -> Operation -> Server ()
 send state op = do
   liftIO $ putStrLn "send"
   liftIO $ putStrLn $ show op
---  (clients,messages) <- state
+  (clients,messages) <- state
+  return ()
 --  msgarray <- liftIO $ readIORef messages
 --  liftIO $ forM_ msgarray $ \x -> return ()
+
 

@@ -13,8 +13,10 @@ import Server
 import Operations
 import Client
 
-import Data.IORef
 import Control.Applicative
+import Data.IORef
+import Data.Dequeue
+import Control.Monad.IO.Class
 
 append ws str = withElems ["editor"] $
    \[editor] ->
@@ -27,10 +29,10 @@ main = do
   -- Run the Haste.App application. Please note that a computation in the App
   -- monad should never contain any free variables.
   runApp (mkConfig "ws://localhost:24601" 24601) $ do
-    -- Create our state-holding elements
+    -- Create our state-holding elements         
     state <- liftServerIO $ do
       clients <- newIORef 0
-      messages <- newIORef []
+      messages <- newIORef (Data.Dequeue.empty)
       return (clients, messages)
 
     -- Create an API object holding all available functions
