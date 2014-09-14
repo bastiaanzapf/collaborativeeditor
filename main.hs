@@ -31,7 +31,7 @@ main = do
   runApp (mkConfig "ws://localhost:24601" 24601) $ do
     -- Create our state-holding elements         
     state <- liftServerIO $ do
-      clients <- newIORef 0
+      clients <- newIORef []
       messages <- newIORef (Data.Dequeue.empty)
       return (clients, messages)
 

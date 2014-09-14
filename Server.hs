@@ -13,7 +13,8 @@ import Control.Monad
 import Operations
 import Data.Dequeue
 
-type State = (IORef Int, IORef (BankersDequeue Operation))
+type State = (IORef [(SessionID,C.MVar Operation)], 
+              IORef (BankersDequeue Operation) )
 
 data API = API {
     apiHello :: Remote ( Server Int             ),
@@ -21,18 +22,28 @@ data API = API {
     apiAwait :: Remote ( Server ()              )
   }
 
+
+newconnection :: SessionID ->
+                 C.MVar Operation ->
+                 [(SessionID,C.MVar Operation)] -> 
+                 [(SessionID,C.MVar Operation)]
+newconnection sid mvar list = (sid,mvar):list
+
 hello :: Server State -> Server Int
 hello state = do
   do (clients,_) <- state
+     sid <- getSessionID
      liftIO $ do 
        putStrLn "hello"
-       count <- readIORef clients
-       writeIORef clients (count+1)
-       return (count+1)
+       mvar <- C.newEmptyMVar
+       atomicModifyIORef' clients (\x->(newconnection sid mvar x,()))
+       return $ fromIntegral sid
 
 await :: Server State -> Server ()
-await _ = do liftIO $ putStrLn "await"
-             return ()
+await _ = let awaitloop = do 
+                liftIO $ putStrLn "await"
+                return ()
+              in awaitloop
 
 enqueue :: IORef (BankersDequeue Operation) -> Operation -> IO ()
 enqueue ioref op = atomicModifyIORef' ioref (\x -> (pushFront x op , ()))
