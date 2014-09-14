@@ -56,7 +56,7 @@ sendKey api station state char previous next =
 
        hash <- liftIO $ readIORef $ contentHash state
 
-       let insert = insertWChar (Mk_Id (station+1000,count)) char
+       let insert = insertWChar (Mk_Id (0,count)) char
                     (Editor.id previous) (Editor.id next)
 
        case insert of
@@ -120,6 +120,16 @@ mouse editor api state k co = react editor api state
 keyboard :: Elem -> API -> ClientState -> Int -> Client ()
 keyboard editor api state k = react editor api state
 
+awaitLoop api content = do 
+  op <- onServer $ apiAwait api
+  consoleLog "message received"
+  consoleLog $ show op
+  case op of
+    Insert wchar -> do mergeIntoHash content wchar
+                       consoleLog $ show wchar
+    Delete id -> consoleLog "delete not implemented yet"
+  awaitLoop api content
+
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
 
@@ -150,16 +160,6 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        mergeIntoHash content wc2
        mergeIntoHash content wc1       
 
-       readHash content id_Begin >>= consoleLog . show
-       readHash content (Mk_Id (1,1)) >>= consoleLog . show
-       readHash content (Mk_Id (1,2)) >>= consoleLog . show
-       readHash content (Mk_Id (1,4)) >>= consoleLog . show
-       readHash content id_End  >>= consoleLog . show
-{-
-       visibleAt content 0 >>= consoleLog . show
-       visibleAt content 1 >>= consoleLog . show
-       visibleAt content 2 >>= consoleLog . show       
--}
        a <- subseq content id_Begin id_End
 
        initialcontent <- Visible.visible content
@@ -175,16 +175,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        consoleLog x
 
        consoleLog "test"
-       fork $ let awaitLoop = do 
-                    op <- onServer $ apiAwait api
-                    consoleLog "message received"
-                    consoleLog $ show op
-                    case op of
-                      Insert wchar -> do mergeIntoHash content wchar
-                                         consoleLog $ show wchar
-                      Delete id -> consoleLog "delete not implemented yet"
-                    awaitLoop
 
-                  in awaitLoop
+       fork $ awaitLoop api content
 
        return ()
