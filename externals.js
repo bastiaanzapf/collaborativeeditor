@@ -54,3 +54,7 @@ function jsCharacterLeftOfCaret(o) {
 function jsTextLength(o) {
    return o.textContent.length;
 }
+
+function jsInsertAt(o,pos,chr) {
+   o.textContent = o.textContent.substring(0,pos) + chr + o.textContent.substring(pos);
+}

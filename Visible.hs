@@ -5,13 +5,12 @@ import Haste.App
 import WCharacter
 import JSHash
 import ConsoleLog
-import Editor
 
 id_Begin = Mk_Id (0,0)
 id_End   = Mk_Id (9999999,0)
 
-wc_begin = W_Character {Editor.id=id_Begin,Editor.visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
-wc_end = W_Character {Editor.id=id_End,Editor.visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
+wc_begin = W_Character {WCharacter.id=id_Begin,WCharacter.visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
+wc_end = W_Character {WCharacter.id=id_End,WCharacter.visible=False,literal=' ',previous_id=id_Begin,next_id=id_End}
 
 visible' :: JSHash Id W_Character -> Id -> Client [Char]
 visible' hash id = do 
@@ -20,7 +19,7 @@ visible' hash id = do
   else do x <- readHash hash id
           case x of
             Just wchar -> do tail <- visible' hash (next_id wchar)
-                             if Editor.visible wchar
+                             if WCharacter.visible wchar
                              then return $ literal wchar : tail
                              else return $ tail
             Nothing    -> error $ "Did not find id " ++ 
@@ -43,7 +42,7 @@ visibleAt' hash id position = do
 --         consoleLog $ show id
          x <- readHash hash id
          case x of
-           Just wchar -> do if Editor.visible wchar ||
+           Just wchar -> do if WCharacter.visible wchar ||
                                id == id_Begin
                             then visibleAt' hash (next_id wchar)
                                  (position-1)
@@ -71,7 +70,7 @@ visiblePos' hash pos id = do
   else do x <- readHash hash id
           case x of
             Just wchar -> do previous <- visible' hash (previous_id wchar)
-                             if Editor.visible wchar
+                             if WCharacter.visible wchar
                              then visiblePos' hash (pos+1) (previous_id wchar)
                              else visiblePos' hash  pos    (previous_id wchar)
             Nothing    -> error $ "Did not find id " ++ 
@@ -79,5 +78,5 @@ visiblePos' hash pos id = do
                           " in hash (visiblePos)."
                       
 
-visiblePos :: JSHash Id W_Character -> Client (Maybe Int)
-visiblePos hash = visiblePos' hash 0 id_Begin
+visiblePos :: JSHash Id W_Character -> Id -> Client (Maybe Int)
+visiblePos hash id = visiblePos' hash 0 id 

@@ -8,6 +8,7 @@ import Haste.Foreign
 import Haste.App
 import JSHash
 import ConsoleLog
+import Visible hiding (visible)
 import WCharacter
 
 subseq :: (JSHash Id W_Character) -> Id -> Id -> Client ( [ W_Character ])
@@ -99,7 +100,8 @@ mergeIntoHash hash wchar =
        seq <- subseq hash (previous_id wchar) (next_id wchar)
 --       consoleLog $ show seq
        if seq == [] || tail seq == [] 
-       then insert hash previous_id next_id wchar
+       then do insert hash previous_id next_id wchar
+               visiblePos hash $ previous_id wchar
        else do next <- readHash hash (next_id wchar)
                case next of
                  Just a -> do let inclseq = seq ++ [ a ]

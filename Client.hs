@@ -123,7 +123,7 @@ mouse editor api state k co = react editor api state
 keyboard :: Elem -> API -> ClientState -> Int -> Client ()
 keyboard editor api state k = react editor api state
 
-awaitLoop api content = do 
+awaitLoop editor api content = do 
   op <- onServer $ apiAwait api
   consoleLog "message received"
   consoleLog $ show op  
@@ -132,10 +132,14 @@ awaitLoop api content = do
     Insert wchar -> do x <- readHash content (WCharacter.id wchar)
                        case x of
                          Just x -> return ()
-                         Nothing -> do mergeIntoHash content wchar
-                                       
+                         Nothing -> do pos<-mergeIntoHash content wchar
+                                       case pos of
+                                         Just pos' -> textInsertAt editor pos' (WCharacter.literal wchar)
+                                         Nothing -> error "No position for HTML insert"
+                                       consoleLog $ show pos
     Delete id -> consoleLog "delete not implemented yet"
-  awaitLoop api content
+
+  awaitLoop editor api content
 
 clientMain :: API -> Client ()
 clientMain api = withElems ["editor"] $ \[editor] -> do       
@@ -191,6 +195,6 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
 
        consoleLog "Client go"
 
-       fork $ awaitLoop api content
+       fork $ awaitLoop editor api content
 
        return ()
