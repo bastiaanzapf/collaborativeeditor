@@ -80,7 +80,6 @@ between wc1 wc2 wc = W_Character {WCharacter.id=WCharacter.id wc,
 
 mergeIntoHash hash wchar = 
     do consoleLog $ "merge "++(show wchar)
-       consoleLog $ "Not (0,0)" ++ (show $ WCharacter.id wchar)
        if (WCharacter.id wchar == Mk_Id (0,0))
        then error "Merge Character (0,0)"
        else return ()

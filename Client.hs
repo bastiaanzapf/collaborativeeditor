@@ -15,11 +15,13 @@ import Operations
 import Server
 import Caret
 import Visible
+import WCharacter
 
 import Data.Char
 import Data.IORef
 
-data ClientState = ClientState { sentCounter   :: IORef Int ,
+data ClientState = ClientState { sessionID     :: SessionID,
+                                 sentCounter   :: IORef Int ,
                                  caretPosition :: IORef Int ,
                                  contentLength :: IORef Int ,
                                  contentHash   :: IORef (JSHash Id W_Character)}
@@ -46,16 +48,17 @@ makeWChar id k previous next =
 
 increment k = (k+1,k)
 
-sendKey :: API -> Int -> ClientState -> Char -> W_Character -> W_Character -> Client ()
-sendKey api station state char previous next = 
+sendKey :: API -> ClientState -> Char -> W_Character -> W_Character -> Client ()
+sendKey api state char previous next = 
     do let counter = sentCounter state
+           station = fromIntegral $ sessionID state
        count <- liftIO $ atomicModifyIORef' counter increment
        consoleLog "sendKey"
        consoleLog $ show char
 
        hash <- liftIO $ readIORef $ contentHash state
 
-       let insert = makeWChar (Mk_Id (0,count)) char
+       let insert = makeWChar (Mk_Id (station `mod` 65536,count)) char
                     (Editor.id previous) (Editor.id next)
 
        mergeIntoHash hash insert
@@ -72,7 +75,8 @@ initialize api editor hash =
        counter <- newCounter
        caretposition <- newCounter
        clcounter <- newCounter
-       return $ ClientState { sentCounter=counter, 
+       return $ ClientState { sessionID=fromIntegral id,
+                              sentCounter=counter, 
                               Client.caretPosition=caretposition,
                               contentLength=clcounter,
                               contentHash=hash }
@@ -105,7 +109,7 @@ react editor api state = do
                             l  == oldTextLength +1 )
                         then do c <- characterLeftOfCaret editor 
                                 case c of
-                                  Just c' ->  sendKey api 0 
+                                  Just c' ->  sendKey api
                                               state (chr c') 
                                               previous next
                                   Nothing ->  return ()
@@ -122,10 +126,14 @@ keyboard editor api state k = react editor api state
 awaitLoop api content = do 
   op <- onServer $ apiAwait api
   consoleLog "message received"
-  consoleLog $ show op
+  consoleLog $ show op  
+
   case op of
-    Insert wchar -> do mergeIntoHash content wchar
-                       consoleLog $ show wchar
+    Insert wchar -> do x <- readHash content (WCharacter.id wchar)
+                       case x of
+                         Just x -> return ()
+                         Nothing -> do mergeIntoHash content wchar
+                                       consoleLog $ show wchar
     Delete id -> consoleLog "delete not implemented yet"
   awaitLoop api content
 
