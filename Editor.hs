@@ -20,6 +20,9 @@ subseq hash previous next = do
                            return (hd':tl)
             Nothing  -> error "Wchar not found in subseq"
 
+id_Begin = Mk_Id (0,0)
+id_End   = Mk_Id (9999999,0)
+
 insert' :: (JSHash Id W_Character) -> W_Character -> W_Character -> W_Character -> Client ()
 insert' hash previous next wchar = do
   let storeWithId x = storeHash hash (WCharacter.id x) x
@@ -29,13 +32,23 @@ insert' hash previous next wchar = do
   then return ()
   else error $ "Can only insert between two characters, instead: " ++ (show previous) ++ " " ++ (show next)
 
+  x <- readHash hash (WCharacter.id wchar)
+
+  case x of
+    Just x -> error $ "Existing character inserted: " ++ (show $ WCharacter.id x)
+    _      -> return ()
+
   storeWithId $ W_Character {WCharacter.id=(WCharacter.id previous),
                              visible=visible previous,
                              literal=literal previous,
                              previous_id=previous_id previous,
                              next_id=WCharacter.id wchar}
 
-  storeWithId wchar
+  storeWithId $ W_Character {WCharacter.id=(WCharacter.id wchar),
+                             visible=visible wchar,
+                             literal=literal wchar,
+                             previous_id=WCharacter.id previous,
+                             next_id=WCharacter.id next}
 
   storeWithId $ W_Character {WCharacter.id=WCharacter.id next,
                              visible=visible next,
@@ -66,7 +79,12 @@ between wc1 wc2 wc = W_Character {WCharacter.id=WCharacter.id wc,
                                   next_id=WCharacter.id wc2}
 
 mergeIntoHash hash wchar = 
-    do a <- readHash hash (previous_id wchar)
+    do consoleLog $ "merge "++(show wchar)
+       consoleLog $ "Not (0,0)" ++ (show $ WCharacter.id wchar)
+       if (WCharacter.id wchar == Mk_Id (0,0))
+       then error "Merge Character (0,0)"
+       else return ()
+       a <- readHash hash (previous_id wchar)
        b <- readHash hash (next_id wchar)
        case a of
          Just _ -> return ()
@@ -87,6 +105,7 @@ mergeIntoHash hash wchar =
                case next of
                  Just a -> do let inclseq = seq ++ [ a ]
                               let (a,b) = findPosition inclseq wchar
+                              consoleLog $ "findPosition: " ++ show (a,b)
                               mergeIntoHash hash (between a b wchar)
 
                  Nothing -> error "mergeIntoHash: next wchar not found"
