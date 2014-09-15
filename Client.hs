@@ -123,6 +123,20 @@ mouse editor api state k co = react editor api state
 keyboard :: Elem -> API -> ClientState -> Int -> Client ()
 keyboard editor api state k = react editor api state
 
+insert state editor pos wchar = do
+  textInsertAt editor pos (WCharacter.literal wchar)
+  let cL = contentLength state
+  count <- liftIO $ atomicModifyIORef' cL increment
+  cPos <- Caret.caretPosition editor
+  case cPos of
+    Just cPos' -> if pos<=cPos'
+                  then do liftIO $ atomicModifyIORef' 
+                                     (Client.caretPosition state)
+                                     increment
+                          return ()
+                  else return ()
+    Nothing -> return ()
+
 awaitLoop clientstate editor api content = do 
   op <- onServer $ apiAwait api
   consoleLog "message received"
@@ -134,10 +148,8 @@ awaitLoop clientstate editor api content = do
                          Just x -> return ()
                          Nothing -> do pos<-mergeIntoHash content wchar
                                        case pos of
-                                         Just pos' -> do textInsertAt editor pos' (WCharacter.literal wchar)
-                                                         let cL = contentLength clientstate
-                                                         count <- liftIO $ atomicModifyIORef' cL increment
-                                                         return ()
+                                         Just pos' -> insert clientstate 
+                                                      editor pos' wchar
                                          Nothing -> error "No position for HTML insert"
                                        consoleLog $ show pos
     Delete id -> consoleLog "delete not implemented yet"

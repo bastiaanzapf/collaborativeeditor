@@ -40,6 +40,7 @@ function jsCaretPosition(o) {
 }
 
 function jsCharacterLeftOfCaret(o) {
+
     var sel = window.getSelection();
     if (sel.anchorNode.parentNode==o) {
        var pos = sel.anchorOffset; 
@@ -55,9 +56,26 @@ function jsTextLength(o) {
    return o.textContent.length;
 }
 
+function jsSetCaretPosition(o,pos) {
+   var range = document.createRange();
+   range.setStart(o.firstChild, pos);
+   range.setEnd(o.firstChild, pos);
+
+   var selection = window.getSelection();
+   selection.removeAllRanges();
+   selection.addRange(range);
+}
+
 function jsInsertAt(o,pos,chr) {
-   oldlength=o.textContent.length
+   oldlength=o.textContent.length;
+   old_pos=jsCaretPosition(o);
+
    o.textContent = o.textContent.substring(0,pos) + String.fromCharCode(chr) + o.textContent.substring(pos);
+
+   if (old_pos[0]==1) {
+      jsSetCaretPosition(o,old_pos[1][1]+1);
+   }
+
    if (o.textContent.length-oldlength != 1) {
       console.log('jsInsertAt broken');
       console.log(o.textContent.substring(0,pos))
