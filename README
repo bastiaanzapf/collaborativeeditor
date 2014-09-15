@@ -6,6 +6,5 @@ Operational transformation" by Oster, Urso, Molli and Imine.
 Using the JSHash module, it is possible to use a Javascript array as a 
 typed hash in Haskell.
 
-The server does not actually do anything yet and the client is minimal
-at best, but core functions are implemented in Haskell and appear to
-work correctly and relatively quickly.
+As of now, entered characters are passed from editor to editor, as 
+an Integer representing their Unicode. Deletion is not implemented yet.
