@@ -10,7 +10,7 @@ import Haste.App
 import Haste.App.Concurrent
 
 import Haste.Foreign
-
+import ConsoleLog
 #ifdef __HASTE__
 
 foreign import ccall jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))

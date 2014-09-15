@@ -56,5 +56,5 @@ function jsTextLength(o) {
 }
 
 function jsInsertAt(o,pos,chr) {
-   o.textContent = o.textContent.substring(0,pos) + chr + o.textContent.substring(pos);
+   o.textContent = o.textContent.substring(0,pos) + String.fromCharCode(chr) + o.textContent.substring(pos);
 }
