@@ -56,5 +56,11 @@ function jsTextLength(o) {
 }
 
 function jsInsertAt(o,pos,chr) {
+   oldlength=o.textContent.length
    o.textContent = o.textContent.substring(0,pos) + String.fromCharCode(chr) + o.textContent.substring(pos);
+   if (o.textContent.length-oldlength != 1) {
+      console.log('jsInsertAt broken');
+      console.log(o.textContent.substring(0,pos))
+      console.log(o.textContent.substring(pos))
+   }
 }
