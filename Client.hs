@@ -133,7 +133,7 @@ awaitLoop api content = do
                        case x of
                          Just x -> return ()
                          Nothing -> do mergeIntoHash content wchar
---                                       consoleLog $ show wchar
+                                       
     Delete id -> consoleLog "delete not implemented yet"
   awaitLoop api content
 

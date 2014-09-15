@@ -1,4 +1,4 @@
-module Visible (Visible.visible,visibleAt) where
+module Visible (Visible.visible,visibleAt,visiblePos) where
 
 import Haste
 import Haste.App
@@ -63,3 +63,21 @@ visibleAt hash position = do
                          then return $ Just wc_begin
                          else return Nothing
     Nothing -> error "Begin not found"
+
+visiblePos' :: JSHash Id W_Character -> Int -> Id -> Client (Maybe Int)
+visiblePos' hash pos id = do 
+  if id == id_Begin
+  then return $ Just pos 
+  else do x <- readHash hash id
+          case x of
+            Just wchar -> do previous <- visible' hash (previous_id wchar)
+                             if Editor.visible wchar
+                             then visiblePos' hash (pos+1) (previous_id wchar)
+                             else visiblePos' hash  pos    (previous_id wchar)
+            Nothing    -> error $ "Did not find id " ++ 
+                          show id ++
+                          " in hash (visiblePos)."
+                      
+
+visiblePos :: JSHash Id W_Character -> Client (Maybe Int)
+visiblePos hash = visiblePos' hash 0 id_Begin
