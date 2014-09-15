@@ -79,7 +79,7 @@ between wc1 wc2 wc = W_Character {WCharacter.id=WCharacter.id wc,
                                   next_id=WCharacter.id wc2}
 
 mergeIntoHash hash wchar = 
-    do consoleLog $ "merge "++(show wchar)
+    do -- consoleLog $ "merge "++(show wchar)
        if (WCharacter.id wchar == Mk_Id (0,0))
        then error "Merge Character (0,0)"
        else return ()
@@ -97,14 +97,14 @@ mergeIntoHash hash wchar =
          _ -> error "abort"
 
        seq <- subseq hash (previous_id wchar) (next_id wchar)
-       consoleLog $ show seq
+--       consoleLog $ show seq
        if seq == [] || tail seq == [] 
        then insert hash previous_id next_id wchar
        else do next <- readHash hash (next_id wchar)
                case next of
                  Just a -> do let inclseq = seq ++ [ a ]
                               let (a,b) = findPosition inclseq wchar
-                              consoleLog $ "findPosition: " ++ show (a,b)
+                              --consoleLog $ "findPosition: " ++ show (a,b)
                               mergeIntoHash hash (between a b wchar)
 
                  Nothing -> error "mergeIntoHash: next wchar not found"

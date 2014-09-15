@@ -98,11 +98,11 @@ react editor api state = do
                   liftIO $ writeIORef textLength l
                   hash <- liftIO $ readIORef $ contentHash state
                   -- Achtung! die Hash wurde noch nicht modifiziert
-                  consoleLog $ "suche Position " ++ (show p')
+--                  consoleLog $ "suche Position " ++ (show p')
                   previous <- visibleAt hash (p'-2)
                   next <- visibleAt hash (p'-1)
-                  consoleLog $ show previous
-                  consoleLog $ show next
+--                  consoleLog $ show previous
+--                  consoleLog $ show next
                   case (previous,next) of
                     (Just previous,Just next) -> 
                         if (p' == oldEditorPosition + 1 &&
@@ -133,7 +133,7 @@ awaitLoop api content = do
                        case x of
                          Just x -> return ()
                          Nothing -> do mergeIntoHash content wchar
-                                       consoleLog $ show wchar
+--                                       consoleLog $ show wchar
     Delete id -> consoleLog "delete not implemented yet"
   awaitLoop api content
 
@@ -189,7 +189,7 @@ clientMain api = withElems ["editor"] $ \[editor] -> do
        x <- pop op_pool
        consoleLog x
 
-       consoleLog "test"
+       consoleLog "Client go"
 
        fork $ awaitLoop api content
 
