@@ -72,13 +72,20 @@ function jsInsertAt(o,pos,chr) {
 
    o.textContent = o.textContent.substring(0,pos) + String.fromCharCode(chr) + o.textContent.substring(pos);
 
-   if (old_pos[0]==1) {
+   if (old_pos[0]==1 && old_pos > pos) {
       jsSetCaretPosition(o,old_pos[1][1]+1);
    }
 
-   if (o.textContent.length-oldlength != 1) {
-      console.log('jsInsertAt broken');
-      console.log(o.textContent.substring(0,pos))
-      console.log(o.textContent.substring(pos))
+}
+
+function jsDeleteAt(o,pos,chr) {
+   oldlength=o.textContent.length;
+   old_pos=jsCaretPosition(o);
+
+   o.textContent = o.textContent.substring(0,pos-1) + o.textContent.substring(pos);
+
+   if (old_pos[0]==1 && old_pos > pos) {
+      jsSetCaretPosition(o,old_pos[1][1]-1);
    }
+
 }

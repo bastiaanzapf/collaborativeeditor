@@ -47,6 +47,7 @@ makeWChar id k previous next =
                    previous_id = previous }
 
 increment k = (k+1,k)
+decrement k = (k-1,k)
 
 sendKey :: API -> ClientState -> Char -> W_Character -> W_Character -> Client ()
 sendKey api state char previous next = 
@@ -126,7 +127,7 @@ keyboard editor api state k = react editor api state
 insert state editor pos wchar = do
   textInsertAt editor pos (WCharacter.literal wchar)
   let cL = contentLength state
-  count <- liftIO $ atomicModifyIORef' cL increment
+  liftIO $ atomicModifyIORef' cL increment
   cPos <- Caret.caretPosition editor
   case cPos of
     Just cPos' -> if pos<=cPos'
@@ -136,6 +137,21 @@ insert state editor pos wchar = do
                           return ()
                   else return ()
     Nothing -> return ()
+
+delete state editor pos wchar = do
+  textDeleteAt editor pos
+  let cL = contentLength state
+  liftIO $ atomicModifyIORef' cL decrement
+  cPos <- Caret.caretPosition editor
+  case cPos of
+    Just cPos' -> if pos<=cPos'
+                  then do liftIO $ atomicModifyIORef' 
+                                     (Client.caretPosition state)
+                                     decrement
+                          return ()
+                  else return ()
+    Nothing -> return ()
+  
 
 awaitLoop clientstate editor api content = do 
   op <- onServer $ apiAwait api

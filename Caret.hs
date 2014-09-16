@@ -2,7 +2,7 @@
 {-# LANGUAGE CPP #-}
 
 module Caret ( caretPosition, characterLeftOfCaret, textLength,
-               textInsertAt ) where
+               textInsertAt, textDeleteAt ) where
 
 import Haste
 import Haste.Prim
@@ -17,6 +17,7 @@ foreign import ccall jsCaretPosition :: Elem -> IO (Ptr (Maybe Int))
 foreign import ccall jsCharacterLeftOfCaret :: Elem -> IO (Ptr (Maybe Int))
 foreign import ccall jsTextLength :: Elem -> IO Int
 foreign import ccall jsInsertAt :: Elem -> Int -> Char -> IO ()
+foreign import ccall jsDeleteAt :: Elem -> Int -> IO ()
 
 #else
 
@@ -32,6 +33,9 @@ jsTextLength = error "jsTextLength called on server side"
 jsInsertAt :: Elem -> Int -> Char -> IO Int
 jsInsertAt = error "jsInsertAt called on server side"
 
+jsDeleteAt :: Elem -> Int -> IO Int
+jsDeleteAt = error "jsDeleteAt called on server side"
+
 #endif
 
 caretPosition elem = do x <- liftIO $ jsCaretPosition elem
@@ -45,4 +49,7 @@ textLength elem = do x <- liftIO $ jsTextLength elem
 
 textInsertAt elem pos char = do x <- liftIO $ jsInsertAt elem pos char
                                 return x
+
+textDeleteAt elem pos = do x <- liftIO $ jsDeleteAt elem pos
+                           return x
 
