@@ -165,7 +165,7 @@ insert state editor pos wchar = do
     Nothing -> return ()
 
 delete state editor pos = do
-  textDeleteAt editor pos
+  textDeleteAt editor (pos+1)
   let cL = contentLength state
   liftIO $ atomicModifyIORef' cL decrement
   cPos <- Caret.caretPosition editor
@@ -194,11 +194,16 @@ awaitLoop clientstate editor api content = do
                                                       editor pos' wchar
                                          Nothing -> error "No position for HTML insert"
                                        consoleLog $ show pos
-    Delete wchar -> do turnInvisible content wchar
-                       pos <- visiblePos content (WCharacter.id wchar)
-                       case pos of 
-                         Just pos' -> delete clientstate editor pos'
-                         Nothing   -> error "No position for HTML delete"
+    Delete wchar -> do x <- readHash content (WCharacter.id wchar)
+                       case x of
+                         Just x -> if (WCharacter.visible x)
+                                   then do turnInvisible content wchar
+                                           pos <- visiblePos content (WCharacter.id wchar)
+                                           case pos of 
+                                             Just pos' -> delete clientstate 
+                                                          editor pos'
+                                             Nothing   -> error "No position for HTML delete"
+                                   else return ()
 
   awaitLoop clientstate editor api content
 

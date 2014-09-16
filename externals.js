@@ -86,6 +86,8 @@ function jsDeleteAt(o,pos,chr) {
 
    if (old_pos[0]==1 && old_pos > pos) {
       jsSetCaretPosition(o,old_pos[1][1]-1);
+   } else {
+      jsSetCaretPosition(o,old_pos[1][1]);
    }
 
 }
