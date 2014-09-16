@@ -78,7 +78,7 @@ sendDelete api state char =
 
        turnInvisible hash char
 
-       onServer $ apiSend api <.> Delete char
+       onServer $ apiSend api <.> Delete (WCharacter.id char)
 
 newCounter :: Client (IORef Int)
 newCounter = liftIO $ newIORef 0
@@ -194,16 +194,16 @@ awaitLoop clientstate editor api content = do
                                                       editor pos' wchar
                                          Nothing -> error "No position for HTML insert"
                                        consoleLog $ show pos
-    Delete wchar -> do x <- readHash content (WCharacter.id wchar)
-                       case x of
-                         Just x -> if (WCharacter.visible x)
-                                   then do turnInvisible content wchar
-                                           pos <- visiblePos content (WCharacter.id wchar)
-                                           case pos of 
-                                             Just pos' -> delete clientstate 
-                                                          editor pos'
-                                             Nothing   -> error "No position for HTML delete"
-                                   else return ()
+    Delete id' -> do x <- readHash content id'
+                     case x of
+                       Just x -> if (WCharacter.visible x)
+                                 then do turnInvisible content x
+                                         pos <- visiblePos content id'
+                                         case pos of 
+                                           Just pos' -> delete clientstate 
+                                                        editor pos'
+                                           Nothing   -> error "No position for HTML delete"
+                                 else return ()
 
   awaitLoop clientstate editor api content
 

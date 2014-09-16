@@ -11,7 +11,7 @@ import WCharacter
 import Haste.App
 
 data Operation = Insert W_Character
-               | Delete W_Character
+               | Delete Id
 
     deriving ( Show )
 
@@ -29,7 +29,7 @@ insertDummy k = (Insert
 instance Binary Operation where
 
     put (Insert w_char) = putWord8 0 >> put w_char
-    put (Delete w_char) = putWord8 1 >> put w_char
+    put (Delete id')    = putWord8 1 >> put id'
 
     get = do cons <- getWord8
              case cons of
