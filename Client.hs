@@ -70,7 +70,7 @@ sendDelete :: API -> ClientState -> W_Character -> Client ()
 sendDelete api state char = 
     do let counter = sentCounter state
            station = fromIntegral $ sessionID state
-       count <- liftIO $ atomicModifyIORef' counter decrement
+
        consoleLog "sendDelete"
        consoleLog $ show char
 
