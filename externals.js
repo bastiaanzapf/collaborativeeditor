@@ -81,12 +81,16 @@ function jsInsertAt(o,pos,chr) {
 function jsDeleteAt(o,pos,chr) {
    oldlength=o.textContent.length;
    old_pos=jsCaretPosition(o);
+   console.log(old_pos);
+   if (pos>=1)
+      o.textContent = o.textContent.substring(0,pos-1) + o.textContent.substring(pos);
+   else
+      o.textContent = o.textContent.substring(pos);
 
-   o.textContent = o.textContent.substring(0,pos-1) + o.textContent.substring(pos);
-
-   if (old_pos[0]==1 && old_pos > pos) {
+   if (old_pos[0]==1 && old_pos[1][1] > pos) {
       jsSetCaretPosition(o,old_pos[1][1]-1);
-   } else {
+   }
+   if (old_pos[0]==1 && old_pos[1][1] < pos) {
       jsSetCaretPosition(o,old_pos[1][1]);
    }
 
