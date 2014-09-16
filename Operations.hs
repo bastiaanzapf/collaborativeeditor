@@ -11,7 +11,7 @@ import WCharacter
 import Haste.App
 
 data Operation = Insert W_Character
-               | Delete Id
+               | Delete W_Character
 
     deriving ( Show )
 
@@ -27,10 +27,13 @@ insertDummy k = (Insert
                                previous_id = Mk_Id (-20,0) } )
 
 instance Binary Operation where
+
     put (Insert w_char) = putWord8 0 >> put w_char
     put (Delete w_char) = putWord8 1 >> put w_char
+
     get = do cons <- getWord8
              case cons of
-               1 -> return (Delete $ Mk_Id (-99,0))
                0 -> do x <- get
-                       return (Insert x)               
+                       return (Insert x)
+               1 -> do x <- get
+                       return (Delete x)
