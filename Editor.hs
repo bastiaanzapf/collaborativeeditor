@@ -1,7 +1,7 @@
 
 module Editor (Id(Mk_Id),W_Character(W_Character),
                WCharacter.id,visible,literal,previous_id,next_id,  
-               subseq,mergeIntoHash) where
+               subseq, mergeIntoHash, turnInvisible) where
 
 import Haste.Prim
 import Haste.Foreign
@@ -110,3 +110,17 @@ mergeIntoHash hash wchar =
                               mergeIntoHash hash (between a b wchar)
 
                  Nothing -> error "mergeIntoHash: next wchar not found"
+
+invisible wc = W_Character {WCharacter.id=WCharacter.id wc,
+                            visible=False,
+                            literal=literal wc,
+                            previous_id=previous_id wc,
+                            next_id=next_id wc}
+
+turnInvisible hash wchar = do
+  a <- readHash hash (WCharacter.id wchar)
+  case a of
+    Just wchar -> storeHash hash (WCharacter.id wchar) $ invisible wchar
+    Nothing -> error "Did not find Character to turn invisible (turnInvisible)"
+  return ()
+  

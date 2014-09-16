@@ -66,6 +66,20 @@ sendKey api state char previous next =
 
        onServer $ apiSend api <.> Insert insert
 
+sendDelete :: API -> ClientState -> W_Character -> Client ()
+sendDelete api state char = 
+    do let counter = sentCounter state
+           station = fromIntegral $ sessionID state
+       count <- liftIO $ atomicModifyIORef' counter decrement
+       consoleLog "sendDelete"
+       consoleLog $ show char
+
+       hash <- liftIO $ readIORef $ contentHash state
+
+       turnInvisible hash char
+
+       onServer $ apiSend api <.> Delete (WCharacter.id char)
+
 newCounter :: Client (IORef Int)
 newCounter = liftIO $ newIORef 0
 
@@ -105,16 +119,28 @@ react editor api state = do
 --                  consoleLog $ show previous
 --                  consoleLog $ show next
                   case (previous,next) of
-                    (Just previous,Just next) -> 
+                    (Just previous,Just next) -> do
                         if (p' == oldEditorPosition + 1 &&
                             l  == oldTextLength +1 )
-                        then do c <- characterLeftOfCaret editor 
+                        then do c <- characterLeftOfCaret editor
                                 case c of
                                   Just c' ->  sendKey api
                                               state (chr c') 
                                               previous next
-                                  Nothing ->  return ()
+                                  Nothing ->  error "Inserted character not found"
                         else return ()
+                        if (p' == oldEditorPosition - 1 &&
+                            l  == oldTextLength - 1 )
+                        then do c <- Caret.caretPosition editor
+                                case c of
+                                  Just c' -> do wchar <- visibleAt hash c'
+                                                case wchar of
+                                                  Just wchar' ->  sendDelete api
+                                                                  state wchar'
+                                                  Nothing ->  error "Deleted character not found"
+                                  Nothing -> error "Caret position not available"
+                        else return ()
+
                     _ -> error "visibleAt returned Nothing in react"
     Nothing -> return ()
 
